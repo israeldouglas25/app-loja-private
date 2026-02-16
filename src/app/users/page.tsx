@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import FormUsers from "../../components/FormUsers";
+import { FormUsers } from "../../components/FormUsers";
 
 export default function Cadastro() {
   const handlerUsers = async (_: string, formData: FormData) => {

@@ -1,8 +1,16 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { FC, useActionState, useState } from "react";
 
-export default function FormUsers({ action }) {
+import { FormInput } from "./FormInput";
+import { FormButton } from "./FormButton";
+import { FormResponse } from "./FormResponse";
+
+type FormUserProps = {
+  action: (_: string, formData: FormData) => Promise<any>;
+};
+
+export const FormUsers: FC<FormUserProps> = ({ action }) => {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -11,41 +19,15 @@ export default function FormUsers({ action }) {
 
   return (
     <>
-      {response && (
-        <p className={`px-4 py-2 ${response.color} text-white font-bold text-sm rounded-lg`}>
-          {response.message}
-          </p>
-        )}
-
+      <FormResponse response={response} />
+      
       <form action={formAction} className="grid mt-4 mb-4 gap-y-2">
-        <input
-          id="username"
-          name="username"
-          type="text"
-          placeholder="Nome"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-        />
 
-        <input
-          id="email"
-          name="email"
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
+        <FormInput id="username" type="text" placeholder="Nome" value={username} setValue={setUsername} />
+        <FormInput id="email" type="email" placeholder="Email" value={email} setValue={setEmail} />
+        <FormInput id="password" type="password" placeholder="Senha" value={password} setValue={setPassword} />
 
-        <input
-          id="password"
-          name="password"
-          type="password"
-          placeholder="Senha"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-
-        <button>Cadastrar</button>
+        <FormButton>Cadastrar</FormButton>
       </form>
     </>
   );
