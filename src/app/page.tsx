@@ -11,7 +11,7 @@ export default function Home() {
         <ul className="list-disc ml-6 underline">
           <li><Link href="/produtos">Produtos</Link></li>
           <li><Link href="/pedidos">Pedidos</Link></li>
-          <li><Link href="/users">Listar Usuarios</Link></li>
+          <li><Link href="/users/list">Listar Usuários</Link></li>
           <li><Link href="/produtos">Listar Produtos</Link></li>
         </ul>
       </div>
