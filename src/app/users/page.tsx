@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { FormUsers } from "../../components/FormUsers";
 
-export default function Cadastro() {
+export default function Users() {
   const handlerUsers = async (_: string, formData: FormData) => {
     "use server";
 
@@ -35,7 +35,7 @@ export default function Cadastro() {
         return { message: data.message || "Erro ao cadastrar usuário", color: "bg-red-400" };
       }
 
-      return { message: data.message || "Usuário cadastrado com sucesso", color: "bg-green-400" };
+      return { message: data.message || "Usuário cadastrado com sucesso", color: "bg-green-400", redirect: true  };
 
     } catch (error) {
       console.error("handlerUsers failed:", error);
