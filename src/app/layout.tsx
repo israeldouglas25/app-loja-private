@@ -3,8 +3,10 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Link from "next/link";
 
+const PAGE_TITLE = "App Loja";
+
 export const metadata: Metadata = {
-  title: "App Loja",
+  title: { default: PAGE_TITLE, template: `%s | ${PAGE_TITLE}` },
 };
 
 export default function RootLayout({

@@ -1,6 +1,14 @@
 import Link from "next/link";
+import { Metadata } from "next";
 
 import { FormUsers } from "../../components/FormUsers";
+import { usersService } from "../../services/usersService";
+
+const PAGE_TITLE = "Cadastro de Usuários";
+
+export const metadata: Metadata = {
+  title: PAGE_TITLE,
+};
 
 export default function Users() {
   const handlerUsers = async (_: string, formData: FormData) => {
@@ -15,27 +23,17 @@ export default function Users() {
     }
 
     try {
-      const body = {
+      const data = await usersService.create({
         name: username,
         email: email,
-        password: password
-      }
-
-      const res = await fetch("http://localhost:8080/api/v1/users", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(body),
+        password: password,
       });
-
-      const data = await res.json();
 
       if (data.status) {
         return { message: data.message || "Erro ao cadastrar usuário", color: "bg-red-400" };
       }
 
-      return { message: data.message || "Usuário cadastrado com sucesso", color: "bg-green-400", redirect: true  };
+      return { message: data.message || "Usuário cadastrado com sucesso", color: "bg-green-400", redirect: true };
 
     } catch (error) {
       console.error("handlerUsers failed:", error);
@@ -45,7 +43,7 @@ export default function Users() {
 
   return (
     <div className="grid gap-y-4 bg-white p-6 rounded-lg shadow-md">
-      <h1 className="text-4xl font-bold text-center">Cadastro de Usuários</h1>
+      <h1 className="text-4xl font-bold text-center">{PAGE_TITLE}</h1>
 
       <FormUsers action={handlerUsers} />
 

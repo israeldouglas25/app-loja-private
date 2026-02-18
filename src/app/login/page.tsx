@@ -1,6 +1,14 @@
 import Link from "next/link";
+import { Metadata } from "next";
 
 import { FormLogin } from "../../components/FormLogin";
+import { loginService } from "@/services/loginService";
+
+const PAGE_TITLE = "Login de Usuários";
+
+export const metadata: Metadata = {
+  title: PAGE_TITLE,
+};
 
 export default function login() {
   const handlerLogin = async (_: string, formData: FormData) => {
@@ -14,20 +22,10 @@ export default function login() {
     }
 
     try {
-      const body = {
+      const data = await loginService.login({
         email: email,
         password: password
-      }
-
-      const res = await fetch("http://localhost:8080/api/v1/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(body),
       });
-
-      const data = await res.json();
 
       if (data.status) {
         return { message: data.message || "Erro ao fazer login", color: "bg-red-400" };
