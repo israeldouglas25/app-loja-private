@@ -1,8 +1,15 @@
-import { PropsWithChildren } from "react";
+import { ButtonHTMLAttributes, FC } from "react";
 
-export const FormButton = ({ children }: PropsWithChildren) => (
-    <button>
-      {children}
-    </button>
-  );
+export const FormButton: FC<ButtonHTMLAttributes<HTMLButtonElement>> = ({
+  onClick,
+  children,
+  ...props
+}) => (
+  <button
+    onClick={onClick}
+    {...props}
+  >
+    {children}
+  </button>
+);
 

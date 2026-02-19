@@ -33,14 +33,16 @@ export const FormUsers: FC<FormUserProps> = ({ action }) => {
   return (
     <>
       <FormResponse response={response} />
-      
+
       <form action={formAction} className="grid mt-4 mb-4 gap-y-2">
 
         <FormInput id="username" type="text" placeholder="Nome" value={username} setValue={setUsername} />
         <FormInput id="email" type="email" placeholder="Email" value={email} setValue={setEmail} />
         <FormInput id="password" type="password" placeholder="Senha" value={password} setValue={setPassword} />
 
-        <FormButton>Cadastrar</FormButton>
+        <FormButton className="bg-orange-500 text-white px-3 py-1 border rounded hover:bg-orange-600 cursor-pointer transition">
+          Cadastrar
+        </FormButton>
       </form>
     </>
   );

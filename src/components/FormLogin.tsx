@@ -17,28 +17,30 @@ export const FormLogin: FC<FormLoginProps> = ({ action }) => {
 
   const [response, formAction] = useActionState(action, null);
 
-    // obtain router instance once inside component body
-    const router = useRouter();
-  
-    useEffect(() => {
-      if (response?.redirect) {
-        const timer = setTimeout(() => {
-          router.push("/");
-        }, 3000);
-        return () => clearTimeout(timer);
-      }
-    }, [response?.redirect, router]);
+  // obtain router instance once inside component body
+  const router = useRouter();
+
+  useEffect(() => {
+    if (response?.redirect) {
+      const timer = setTimeout(() => {
+        router.push("/");
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [response?.redirect, router]);
 
   return (
     <>
       <FormResponse response={response} />
-      
+
       <form action={formAction} className="grid mt-4 mb-4 gap-y-2">
 
         <FormInput id="email" type="email" placeholder="Email" value={email} setValue={setEmail} />
         <FormInput id="password" type="password" placeholder="Senha" value={password} setValue={setPassword} />
 
-        <FormButton>Login</FormButton>
+        <FormButton className="bg-orange-500 text-white px-3 py-1 border rounded hover:bg-orange-600 cursor-pointer transition">
+          Login
+        </FormButton>
       </form>
     </>
   );

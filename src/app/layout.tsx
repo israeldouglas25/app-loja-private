@@ -17,7 +17,7 @@ export default function RootLayout({
   return (
     <html lang="pt-BR">
       <body className="">
-        <header className="fixed top-0 right-0 left-0 py-2 border-b shadow-xl flex items-center justify-end px-4">
+        <header className="fixed top-0 right-0 left-0 py-2 shadow-xl flex items-center justify-end px-4">
           <Link className="font-bold text-lg text-white absolute left-1/2 transform -translate-x-1/2" href="/">
             MAIS VARIEDADES
           </Link>
@@ -37,9 +37,9 @@ export default function RootLayout({
           </div>
         </header>
 
-        <main className="mt-14 mb-14 flex justify-center">{children}</main>
+        <main className="pt-10 mt-14 mb-14 flex justify-center">{children}</main>
 
-        <footer className="fixed bottom-0 left-0 right-0 text-center border-t mt-12 relative">
+        <footer className="fixed bottom-0 left-0 right-0 text-center mt-12 relative">
           <p className="text-sm">© 2026 App Loja. Todos os direitos reservados.</p>
           <p className="text-xs">Israel Douglas</p>
         </footer>

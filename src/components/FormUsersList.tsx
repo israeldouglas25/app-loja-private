@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { usersService } from "../services/usersService";
 import { FormResponse } from "./FormResponse";
+import { Modal } from "./Modal";
+import { FormButton } from "./FormButton";
 
 const PAGE_TITLE = "Lista de Usuários";
 
@@ -19,7 +21,7 @@ export function FormUsersList() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   // response object for FormResponse component
-  const [response, setResponse] = useState<{message:string;color:string} | null>(null);
+  const [response, setResponse] = useState<{ message: string; color: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   // clear response after 3 seconds
@@ -36,7 +38,9 @@ export function FormUsersList() {
 
   // editing state
   const [editing, setEditing] = useState<Record<number, Partial<User>>>({});
-  
+  // hold a single user when the "Detalhar" button is clicked
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+
   const load = async (): Promise<User[] | undefined> => {
     setLoading(true);
     try {
@@ -112,6 +116,22 @@ export function FormUsersList() {
     }
   };
 
+  // handler invoked when user clicks "Detalhar" button
+  const detalheUser = async (user: User) => {
+    setLoading(true);
+    try {
+      // fetch fresh data in case list is partial
+      const data = await usersService.getById(user.id);
+      setSelectedUser(data);
+    } catch (err) {
+      console.error("failed to load user details", err);
+      setError("Erro ao carregar detalhes");
+      setResponse({ message: "Erro ao carregar detalhes do usuário", color: "bg-red-400" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const startIndex = (page - 1) * pageSize;
   const pageUsers = users.slice(startIndex, startIndex + pageSize);
   const totalPages = Math.ceil(users.length / pageSize);
@@ -121,6 +141,40 @@ export function FormUsersList() {
 
   if (loading) return <p className="text-center">Carregando usuários...</p>;
   if (error) return <p className="text-center text-red-500">{error}</p>;
+
+  // when a user has been selected for detail, show modal component
+  if (selectedUser) {
+    const keys = Array.from(new Set(Object.keys(selectedUser)));
+    return (
+      <Modal
+        onClose={() => {
+          setSelectedUser(null);
+          load();
+        }}
+      >
+        <FormResponse response={response} />
+        <div
+          className="grid gap-2 p-2 border rounded bg-gray-50 mt-4"
+          style={{ gridTemplateColumns: `repeat(${keys.length}, minmax(0,1fr))` }}
+        >
+          {keys.map((key) => (
+            <div key={key} className="flex flex-col">
+              <label className="text-sm font-medium capitalize" htmlFor={`${key}-detail`}>
+                {key}
+              </label>
+              <input
+                id={`${key}-detail`}
+                type="text"
+                readOnly
+                value={(selectedUser as any)[key] ?? ""}
+              />
+            </div>
+          ))}
+        </div>
+      </Modal>
+    );
+  }
+
   if (users.length === 0) return <p className="text-center">Nenhum usuário encontrado.</p>;
 
   return (
@@ -157,7 +211,6 @@ export function FormUsersList() {
                         [user.id]: { ...e[user.id], [key]: val },
                       }));
                     }}
-                    className="border px-2 py-1 rounded bg-white"
                   />
                 </div>
               ))}
@@ -165,37 +218,44 @@ export function FormUsersList() {
               <div className="flex items-center gap-2 justify-end">
                 {isEditing ? (
                   <>
-                    <button
+                    <FormButton
                       type="button"
-                      className="text-green-600"
+                      className="font-bold text-sm bg-lime-600 text-white px-3 py-1 rounded hover:bg-lime-700 transition border"
                       onClick={() => saveEdit(user.id)}
                     >
                       Salvar
-                    </button>
-                    <button
+                    </FormButton>
+                    <FormButton
                       type="button"
-                      className="text-gray-600"
+                      className="font-bold text-sm bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition border"
                       onClick={() => cancelEdit(user.id)}
                     >
                       Cancelar
-                    </button>
+                    </FormButton>
                   </>
                 ) : (
                   <>
-                    <button
+                    <FormButton
                       type="button"
-                      className="text-blue-600"
+                      className="font-bold text-sm bg-cyan-600 text-white px-3 py-1 rounded hover:bg-cyan-700 transition border"
+                      onClick={() => detalheUser(user)}
+                    >
+                      Detalhar
+                    </FormButton>
+                    <FormButton
+                      type="button"
+                      className="font-bold text-sm bg-yellow-400 text-white px-3 py-1 rounded hover:bg-yellow-500 transition border"
                       onClick={() => startEdit(user)}
                     >
                       Editar
-                    </button>
-                    <button
+                    </FormButton>
+                    <FormButton
                       type="button"
-                      className="text-red-600"
+                      className="font-bold text-sm bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition border"
                       onClick={() => deleteUser(user.id)}
                     >
                       Excluir
-                    </button>
+                    </FormButton>
                   </>
                 )}
               </div>
@@ -206,23 +266,23 @@ export function FormUsersList() {
 
       {totalPages > 1 && (
         <div className="flex justify-center space-x-4 mt-4">
-          <button
+          <FormButton
             disabled={page === 1}
             onClick={() => setPage((p) => Math.max(1, p - 1))}
-            className="px-3 py-1 border rounded disabled:opacity-50"
+            className="bg-orange-500 text-white px-3 py-1 border rounded disabled:opacity-50"
           >
             Anterior
-          </button>
+          </FormButton>
           <span>
             Página {page} de {totalPages}
           </span>
-          <button
+          <FormButton
             disabled={page === totalPages}
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            className="px-3 py-1 border rounded disabled:opacity-50"
+            className="bg-orange-500 text-white px-3 py-1 border rounded disabled:opacity-50"
           >
             Próxima
-          </button>
+          </FormButton>
         </div>
       )}
     </div>
