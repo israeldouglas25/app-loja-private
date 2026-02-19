@@ -269,7 +269,7 @@ export function FormUsersList() {
           <FormButton
             disabled={page === 1}
             onClick={() => setPage((p) => Math.max(1, p - 1))}
-            className="bg-orange-500 text-white px-3 py-1 border rounded disabled:opacity-50"
+            className="font-bold bg-orange-500 hover:bg-orange-600 text-white px-3 py-1 border disabled:opacity-50"
           >
             Anterior
           </FormButton>
@@ -279,7 +279,7 @@ export function FormUsersList() {
           <FormButton
             disabled={page === totalPages}
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            className="bg-orange-500 text-white px-3 py-1 border rounded disabled:opacity-50"
+            className="font-bold bg-orange-500 hover:bg-orange-600 text-white px-3 py-1 border disabled:opacity-50"
           >
             Próxima
           </FormButton>

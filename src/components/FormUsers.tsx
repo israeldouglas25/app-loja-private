@@ -40,7 +40,7 @@ export const FormUsers: FC<FormUserProps> = ({ action }) => {
         <FormInput id="email" type="email" placeholder="Email" value={email} setValue={setEmail} />
         <FormInput id="password" type="password" placeholder="Senha" value={password} setValue={setPassword} />
 
-        <FormButton className="bg-orange-500 text-white px-3 py-1 border rounded hover:bg-orange-600 cursor-pointer transition">
+        <FormButton className="bg-orange-500 text-white hover:bg-orange-600 font-bold">
           Cadastrar
         </FormButton>
       </form>
