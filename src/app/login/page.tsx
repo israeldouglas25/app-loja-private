@@ -31,7 +31,13 @@ export default function login() {
         return { message: data.message || "Erro ao fazer login", color: "bg-red-400" };
       }
 
-      return { message: data.message || "Login realizado com sucesso", color: "bg-green-400" };
+      // successful login, return any user info provided by the backend
+      return {
+        message: data.message || "Login realizado com sucesso",
+        color: "bg-green-400",
+        redirect: true,
+        user: data.user || data // backend may return user object directly
+      };
 
     } catch (error) {
       console.error("handlerLogin failed:", error);

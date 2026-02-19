@@ -21,6 +21,9 @@ export const FormLogin: FC<FormLoginProps> = ({ action }) => {
   const router = useRouter();
 
   useEffect(() => {
+    if (response?.user) {
+      localStorage.setItem("user", JSON.stringify(response.user));
+    }
     if (response?.redirect) {
       const timer = setTimeout(() => {
         router.push("/");
