@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 
 import "./globals.css";
-import Link from "next/link";
 import { Header } from "@/components/Header";
 
 const PAGE_TITLE = "App Loja";

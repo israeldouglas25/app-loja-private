@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from 'next/image'
 import { usersService } from "../services/usersService";
 import { FormResponse } from "./FormResponse";
 import { Modal } from "./Modal";
@@ -8,12 +9,10 @@ import { FormButton } from "./FormButton";
 
 const PAGE_TITLE = "Lista de Usuários";
 
-// define the shape of a user object - adjust based on backend response
 export type User = {
   id: number;
   name: string;
   email: string;
-  // include any other fields returned by the API (e.g. password, createdAt)
   [key: string]: any;
 };
 
@@ -220,41 +219,41 @@ export function FormUsersList() {
                   <>
                     <FormButton
                       type="button"
-                      className="font-bold text-sm bg-lime-600 text-white px-3 py-1 rounded hover:bg-lime-700 transition border"
+                      className="hover:bg-green-50 transition"
                       onClick={() => saveEdit(user.id)}
                     >
-                      Salvar
+                      <Image src="/save.png" alt="Salvar usuário" width={20} height={20} />
                     </FormButton>
                     <FormButton
                       type="button"
-                      className="font-bold text-sm bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition border"
+                      className="hover:bg-red-50 transition"
                       onClick={() => cancelEdit(user.id)}
                     >
-                      Cancelar
+                      <Image src="/cancel.png" alt="Cancelar edição" width={20} height={20} />
                     </FormButton>
                   </>
                 ) : (
                   <>
                     <FormButton
                       type="button"
-                      className="font-bold text-sm bg-cyan-600 text-white px-3 py-1 rounded hover:bg-cyan-700 transition border"
+                      className="hover:bg-orange-50 transition"
                       onClick={() => detalheUser(user)}
                     >
-                      Detalhar
+                      <Image src="/user.png" alt="Detalhar usuário" width={20} height={20} />
                     </FormButton>
                     <FormButton
                       type="button"
-                      className="font-bold text-sm bg-yellow-400 text-white px-3 py-1 rounded hover:bg-yellow-500 transition border"
+                      className="hover:bg-yellow-50 transition"
                       onClick={() => startEdit(user)}
                     >
-                      Editar
+                      <Image src="/edit.png" alt="Editar usuário" width={20} height={20} />
                     </FormButton>
                     <FormButton
                       type="button"
-                      className="font-bold text-sm bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition border"
+                      className="hover:bg-red-50 transition"
                       onClick={() => deleteUser(user.id)}
                     >
-                      Excluir
+                      <Image src="/lixeira.png" alt="Excluir usuário" width={20} height={20} />
                     </FormButton>
                   </>
                 )}

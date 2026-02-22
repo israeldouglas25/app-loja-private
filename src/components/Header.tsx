@@ -1,26 +1,39 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
+import Link from "next/link";
+
 import { FormButton } from "./FormButton";
 
 export function Header() {
     const [userName, setUserName] = useState<string | null>(null);
 
     useEffect(() => {
-        try {
-            const item = localStorage.getItem("user");
-            if (item) {
-                const u = JSON.parse(item);
-                setUserName(u?.name);
+        const loadUser = () => {
+            try {
+                const item = localStorage.getItem("user");
+                if (item) {
+                    const u = JSON.parse(item);
+                    setUserName(u?.name);
+                } else {
+                    setUserName(null);
+                }
+            } catch (e) {
+                console.error("failed to read user from localStorage", e);
             }
-        } catch (e) {
-            console.error("failed to read user from localStorage", e);
-        }
+        };
+
+        loadUser();
+        window.addEventListener("userChanged", loadUser);
+        return () => {
+            window.removeEventListener("userChanged", loadUser);
+        };
     }, []);
 
     const handleLogout = () => {
         localStorage.removeItem("user");
+        setUserName(null);
+        window.dispatchEvent(new Event("userChanged"));
         window.location.href = "/";
     };
 

@@ -31,7 +31,6 @@ export default function login() {
         return { message: data.message || "Erro ao fazer login", color: "bg-red-400" };
       }
 
-      // successful login, return any user info provided by the backend
       return {
         message: data.message || "Login realizado com sucesso",
         color: "bg-green-400",
@@ -47,7 +46,7 @@ export default function login() {
 
   return (
     <div className="grid gap-y-4 bg-white p-6 rounded-lg shadow-md">
-      <h1 className="text-4xl font-bold text-center">Login de Usuários</h1>
+      <h1 className="text-4xl font-bold text-center">{PAGE_TITLE}</h1>
 
       <FormLogin action={handlerLogin} />
 
