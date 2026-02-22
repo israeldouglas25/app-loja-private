@@ -22,15 +22,6 @@ export const FormProduct: FC<FormProductProps> = ({ action }) => {
   // obtain router instance once inside component body
   const router = useRouter();
 
-  useEffect(() => {
-    if (response?.redirect) {
-      const timer = setTimeout(() => {
-        router.push("/");
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [response?.redirect, router]);
-
   return (
     <>
       <FormResponse response={response} />

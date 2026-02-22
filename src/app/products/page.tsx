@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Metadata } from "next";
 
 import { FormProduct } from "../../components/FormProduct";
-import { usersService } from "../../services/usersService";
+import { productsService } from "../../services/productsService";
 
 const PAGE_TITLE = "Cadastro de Produtos";
 
@@ -24,7 +24,7 @@ export default function Users() {
     }
 
     try {
-      const data = await usersService.create({
+      const data = await productsService.create({
         name: name,
         stockQuantity: parseInt(stockQuantity || "0"),
         categoryId: parseInt(categoryId || "0"),

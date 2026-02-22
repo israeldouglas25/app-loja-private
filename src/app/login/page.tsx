@@ -3,6 +3,7 @@ import { Metadata } from "next";
 
 import { FormLogin } from "../../components/FormLogin";
 import { loginService } from "@/services/loginService";
+import { cookies } from "next/headers";
 
 const PAGE_TITLE = "Login de Usuários";
 
@@ -24,18 +25,28 @@ export default function login() {
     try {
       const data = await loginService.login({
         email: email,
-        password: password
+        password: password,
       });
 
       if (data.status) {
         return { message: data.message || "Erro ao fazer login", color: "bg-red-400" };
       }
 
+      // if we're running on the server, persist the token as a cookie
+      if (typeof window === "undefined" && data?.token) {
+        (await cookies()).set("token", data.token, {
+          httpOnly: true,
+          path: "/",
+          sameSite: "lax",
+          maxAge: 60 * 60 * 24 * 7, // one week
+        });
+      }
+
       return {
         message: data.message || "Login realizado com sucesso",
         color: "bg-green-400",
         redirect: true,
-        user: data.user || data // backend may return user object directly
+        user: data.user || data, // backend may return user object directly
       };
 
     } catch (error) {
