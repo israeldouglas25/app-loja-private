@@ -192,7 +192,7 @@ export function FormUsersList() {
               {allKeys.map((key) => (
                 <div key={key} className="flex flex-col">
                   <label
-                    className="text-sm font-medium capitalize"
+                    className="p-1 text-sm font-medium capitalize"
                     htmlFor={`${key}-${user.id}`}
                   >
                     {key}
@@ -200,10 +200,11 @@ export function FormUsersList() {
                   <input
                     id={`${key}-${user.id}`}
                     type="text"
-                    readOnly={!isEditing}
+                    readOnly={!isEditing || key === "id"}
+                    disabled={key === "id"}
                     value={rowData[key] ?? ""}
                     onChange={(e) => {
-                      if (!isEditing) return;
+                      if (!isEditing || key === "id") return;
                       const val = e.target.value;
                       setEditing((e) => ({
                         ...e,

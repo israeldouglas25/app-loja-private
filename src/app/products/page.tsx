@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   title: PAGE_TITLE,
 };
 
-export default function Users() {
+export default function Products() {
   const handlerProducts = async (_: string, formData: FormData) => {
     "use server";
 
