@@ -26,6 +26,14 @@ export const FormLogin: FC<FormLoginProps> = ({ action }) => {
       // notify other components (e.g. Header) that the stored user changed
       window.dispatchEvent(new Event("userChanged"));
     }
+
+    // Store the token in localStorage after successful login
+    if (response?.token) {
+      localStorage.setItem("token", response.token);
+      localStorage.setItem("tokenTimestamp", Date.now().toString());
+      console.log("Token armazenado no localStorage:", response.token);
+    }
+
     console.log("FormLogin response:", response);
     if (response?.redirect) {
       const timer = setTimeout(() => {
@@ -33,7 +41,7 @@ export const FormLogin: FC<FormLoginProps> = ({ action }) => {
       }, 3000);
       return () => clearTimeout(timer);
     }
-  }, [response?.redirect, router, response?.user]);
+  }, [response?.redirect, router, response?.user, response?.token]);
 
   return (
     <>

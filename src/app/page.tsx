@@ -10,9 +10,10 @@ export default function Home() {
 
         <ul className="list-disc ml-6 underline">
           <li><Link href="/products">Produtos</Link></li>
-          <li><Link href="/pedidos">Pedidos</Link></li>
+          <li><Link href="/products/list">Listar Produtos</Link></li>
+          <li><Link href="/orders">Pedidos</Link></li>
+          <li><Link href="/orders/list">Listar Pedidos</Link></li>
           <li><Link href="/users/list">Listar Usuários</Link></li>
-          <li><Link href="/produtos">Listar Produtos</Link></li>
         </ul>
       </div>
     </div>

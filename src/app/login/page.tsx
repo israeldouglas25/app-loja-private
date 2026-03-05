@@ -46,6 +46,7 @@ export default function login() {
         message: data.message || "Login realizado com sucesso",
         color: "bg-green-400",
         redirect: true,
+        token: data.token, // Include token so client can store it in localStorage
         user: data.user || data, // backend may return user object directly
       };
 

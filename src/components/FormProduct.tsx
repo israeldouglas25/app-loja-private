@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { FC, useActionState, useEffect, useState } from "react";
+import { FC, useActionState, useState } from "react";
 
 import { FormInput } from "./FormInput";
 import { FormButton } from "./FormButton";

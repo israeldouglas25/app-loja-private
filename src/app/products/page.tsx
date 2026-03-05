@@ -32,6 +32,7 @@ export default function Products() {
       });
 
       if (data.status) {
+        console.error("Error creating product:", data);
         return { message: data.message || "Erro ao cadastrar produto", color: "bg-red-400" };
       }
 

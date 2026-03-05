@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 
 import { FormButton } from "./FormButton";
+import { loginService } from "@/services/loginService";
 
 export function Header() {
     const [userName, setUserName] = useState<string | null>(null);
@@ -30,11 +31,12 @@ export function Header() {
         };
     }, []);
 
-    const handleLogout = () => {
-        localStorage.removeItem("user");
+    const handleLogout = async () => {
+        // Call loginService.logout to clear all authentication data
+        await loginService.logout();
         setUserName(null);
-        window.dispatchEvent(new Event("userChanged"));
-        window.location.href = "/";
+        // Redirect to login page
+        window.location.href = "/login";
     };
 
     return (
