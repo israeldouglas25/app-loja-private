@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { FormResponse } from "../components/FormResponse";
 import { Modal } from "../components/Modal";
 import { FormButton } from "../components/FormButton";
+import { formatIfCurrency } from "./currencyFormatter";
 
 export interface ListItem {
   id: number;
@@ -255,7 +256,7 @@ export function GenericList<T extends ListItem>({
                 id={`${key}-detail`}
                 type="text"
                 readOnly
-                value={(selectedItem as any)[key] ?? ""}
+                value={formatIfCurrency(key, (selectedItem as any)[key] ?? "")}
               />
             </div>
           ))}
@@ -292,7 +293,7 @@ export function GenericList<T extends ListItem>({
                     type="text"
                     readOnly={!isEditing || disabledFields.includes(key)}
                     disabled={disabledFields.includes(key)}
-                    value={rowData[key] ?? ""}
+                    value={formatIfCurrency(key, rowData[key] ?? "")}
                     onChange={(e) => {
                       if (!isEditing || disabledFields.includes(key)) return;
                       const val = e.target.value;

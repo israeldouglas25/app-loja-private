@@ -76,7 +76,7 @@ export function proxy(req: NextRequest) {
   return NextResponse.next();
 }
 
-// apply middleware to application routes and API endpoints
+// apply proxy to application routes and API endpoints
 export const config = {
   matcher: [
     "/api/:path*",
