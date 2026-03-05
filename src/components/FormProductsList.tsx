@@ -20,7 +20,7 @@ export function FormProductsList() {
       pageSize={10}
       errorPrefix="Produto"
       loadingMessage="Carregando produtos..."
-      emptyMessage="Nenhum produto encontrado."
+      emptyMessage="Nenhum produto encontrado ou você não tem permissão para visualizar os produtos."
       visibleFields={["id", "name", "category", "stockQuantity", "unitValue"]}
       columnLabels={{
         id: "ID",
