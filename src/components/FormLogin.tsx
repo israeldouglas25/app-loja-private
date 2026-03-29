@@ -1,19 +1,19 @@
-"use client";
+'use client';
 
-import { FC, useActionState, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { FC, useActionState, useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
-import { FormInput } from "./FormInput";
-import { FormButton } from "./FormButton";
-import { FormResponse } from "./FormResponse";
+import { FormInput } from './FormInput';
+import { FormButton } from './FormButton';
+import { FormResponse } from './FormResponse';
 
 type FormLoginProps = {
   action: (_: string, formData: FormData) => Promise<any>;
 };
 
 export const FormLogin: FC<FormLoginProps> = ({ action }) => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
   const [response, formAction] = useActionState(action, null);
 
@@ -22,35 +22,59 @@ export const FormLogin: FC<FormLoginProps> = ({ action }) => {
 
   useEffect(() => {
     if (response?.user) {
-      localStorage.setItem("user", JSON.stringify(response.user));
+      localStorage.setItem('user', JSON.stringify(response.user));
       // notify other components (e.g. Header) that the stored user changed
-      window.dispatchEvent(new Event("userChanged"));
+      window.dispatchEvent(new Event('userChanged'));
     }
 
     // Store the token in localStorage after successful login
     if (response?.token) {
-      localStorage.setItem("token", response.token);
-      localStorage.setItem("tokenTimestamp", Date.now().toString());
-      console.log("Token armazenado no localStorage:", response.token);
+      localStorage.setItem('token', response.token);
+      console.log('Token armazenado no localStorage:', response.token);
     }
 
-    console.log("FormLogin response:", response);
+    // Store the expiration timestamp
+    if (response?.expiresIn) {
+      const expiresAt = Date.now() + response.expiresIn * 1000;
+      localStorage.setItem('tokenExpires', expiresAt.toString());
+      console.log('Token expires at:', new Date(expiresAt).toISOString());
+    }
+
+    console.log('FormLogin response:', response);
     if (response?.redirect) {
       const timer = setTimeout(() => {
-        router.push("/");
+        router.push('/');
       }, 3000);
       return () => clearTimeout(timer);
     }
-  }, [response?.redirect, router, response?.user, response?.token]);
+  }, [
+    response?.redirect,
+    router,
+    response?.user,
+    response?.token,
+    response?.expiresIn,
+    response,
+  ]);
 
   return (
     <>
       <FormResponse response={response} />
 
       <form action={formAction} className="grid mt-4 mb-4 gap-y-2">
-
-        <FormInput id="email" type="email" placeholder="Email" value={email} setValue={setEmail} />
-        <FormInput id="password" type="password" placeholder="Senha" value={password} setValue={setPassword} />
+        <FormInput
+          id="email"
+          type="email"
+          placeholder="Email"
+          value={email}
+          setValue={setEmail}
+        />
+        <FormInput
+          id="password"
+          type="password"
+          placeholder="Senha"
+          value={password}
+          setValue={setPassword}
+        />
 
         <FormButton className="bg-orange-500 text-white hover:bg-orange-600 font-bold">
           Login
@@ -58,4 +82,4 @@ export const FormLogin: FC<FormLoginProps> = ({ action }) => {
       </form>
     </>
   );
-}
+};

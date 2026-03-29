@@ -1,12 +1,12 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import Image from "next/image";
-import { useRouter } from "next/navigation";
-import { FormResponse } from "../components/FormResponse";
-import { Modal } from "../components/Modal";
-import { FormButton } from "../components/FormButton";
-import { formatIfCurrency } from "./currencyFormatter";
+import { useEffect, useState } from 'react';
+import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import { FormResponse } from '../components/FormResponse';
+import { Modal } from '../components/Modal';
+import { FormButton } from '../components/FormButton';
+import { formatIfCurrency } from './currencyFormatter';
 
 export interface ListItem {
   id: number;
@@ -36,15 +36,18 @@ export function GenericList<T extends ListItem>({
   title,
   pageSize = 5,
   dataField,
-  disabledFields = ["id"],
-  loadingMessage = "Carregando...",
-  emptyMessage = "Nenhum item encontrado.",
-  errorPrefix = "Item",
+  disabledFields = ['id'],
+  loadingMessage = 'Carregando...',
+  emptyMessage = 'Nenhum item encontrado.',
+  errorPrefix = 'Item',
 }: GenericListProps<T>) {
   const router = useRouter();
   const [items, setItems] = useState<T[]>([]);
   const [loading, setLoading] = useState(true);
-  const [response, setResponse] = useState<{ message: string; color: string } | null>(null);
+  const [response, setResponse] = useState<{
+    message: string;
+    color: string;
+  } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   // clear response after 3 seconds
@@ -64,15 +67,21 @@ export function GenericList<T extends ListItem>({
   const [selectedItem, setSelectedItem] = useState<T | null>(null);
 
   const handleTokenExpired = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("tokenTimestamp");
-    document.cookie = "token=; path=/; max-age=0; sameSite=lax";
-    setResponse({ message: "Sua sessão expirou. Redirecionando...", color: "bg-yellow-400" });
-    setTimeout(() => router.push("/login"), 2000);
+    localStorage.removeItem('token');
+    localStorage.removeItem('tokenExpires');
+    document.cookie = 'token=; path=/; max-age=0; sameSite=lax';
+    setResponse({
+      message: 'Sua sessão expirou. Redirecionando...',
+      color: 'bg-yellow-400',
+    });
+    setTimeout(() => router.push('/login'), 2000);
   };
 
   const handleForbidden = () => {
-    setResponse({ message: "Acesso negado. Você não tem permissão para esta ação.", color: "bg-red-400" });
+    setResponse({
+      message: 'Acesso negado. Você não tem permissão para esta ação.',
+      color: 'bg-red-400',
+    });
   };
 
   const load = async (): Promise<T[] | undefined> => {
@@ -82,36 +91,40 @@ export function GenericList<T extends ListItem>({
       let arr: T[] = [];
       if (Array.isArray(data)) {
         arr = data as T[];
-      } else if (data && typeof data === "object" && dataField) {
+      } else if (data && typeof data === 'object' && dataField) {
         arr = (data as any)[dataField] as T[];
-      } else if (data && typeof data === "object") {
+      } else if (data && typeof data === 'object') {
         // try to find array field automatically
         const values = Object.values(data);
         const arrayField = values.find((v) => Array.isArray(v));
         arr = (arrayField || []) as T[];
       } else {
-        console.warn("unexpected response", data);
+        console.warn('unexpected response', data);
       }
 
       setItems(arr);
       return arr;
     } catch (err: any) {
-      console.error("failed to load items", err);
-      
+      console.error('failed to load items', err);
+
       // Check if error is due to token expiration (401)
-      if (err?.isTokenExpired || err?.message?.includes("sessão expirou") || err?.status === 401) {
+      if (
+        err?.isTokenExpired ||
+        err?.message?.includes('sessão expirou') ||
+        err?.status === 401
+      ) {
         handleTokenExpired();
         return undefined;
       }
-      
+
       // Check if error is due to insufficient permissions (403)
-      if (err?.status === 403 || err?.message?.includes("Acesso negado")) {
+      if (err?.status === 403 || err?.message?.includes('Acesso negado')) {
         handleForbidden();
         return undefined;
       }
-      
+
       setError(`Erro ao carregar lista`);
-      setResponse({ message: `Erro ao carregar lista`, color: "bg-red-400" });
+      setResponse({ message: `Erro ao carregar lista`, color: 'bg-red-400' });
       return undefined;
     } finally {
       setLoading(false);
@@ -143,24 +156,34 @@ export function GenericList<T extends ListItem>({
         setPage((p) => Math.min(p, totalPages));
       }
       cancelEdit(id);
-      setResponse({ message: `${errorPrefix} atualizado com sucesso`, color: "bg-green-400" });
+      setResponse({
+        message: `${errorPrefix} atualizado com sucesso`,
+        color: 'bg-green-400',
+      });
     } catch (err: any) {
-      console.error("update failed", err);
-      
+      console.error('update failed', err);
+
       // Check if error is due to token expiration (401)
-      if (err?.isTokenExpired || err?.message?.includes("sessão expirou") || err?.status === 401) {
+      if (
+        err?.isTokenExpired ||
+        err?.message?.includes('sessão expirou') ||
+        err?.status === 401
+      ) {
         handleTokenExpired();
         return;
       }
-      
+
       // Check if error is due to insufficient permissions (403)
-      if (err?.status === 403 || err?.message?.includes("Acesso negado")) {
+      if (err?.status === 403 || err?.message?.includes('Acesso negado')) {
         handleForbidden();
         return;
       }
-      
+
       setError(`Erro ao atualizar ${errorPrefix}`);
-      setResponse({ message: `Erro ao atualizar ${errorPrefix}`, color: "bg-red-400" });
+      setResponse({
+        message: `Erro ao atualizar ${errorPrefix}`,
+        color: 'bg-red-400',
+      });
     }
   };
 
@@ -173,24 +196,34 @@ export function GenericList<T extends ListItem>({
         const totalPages = Math.max(1, Math.ceil(data.length / pageSize));
         setPage((p) => Math.min(p, totalPages));
       }
-      setResponse({ message: `${errorPrefix} excluído com sucesso`, color: "bg-green-400" });
+      setResponse({
+        message: `${errorPrefix} excluído com sucesso`,
+        color: 'bg-green-400',
+      });
     } catch (err: any) {
-      console.error("delete failed", err);
-      
+      console.error('delete failed', err);
+
       // Check if error is due to token expiration (401)
-      if (err?.isTokenExpired || err?.message?.includes("sessão expirou") || err?.status === 401) {
+      if (
+        err?.isTokenExpired ||
+        err?.message?.includes('sessão expirou') ||
+        err?.status === 401
+      ) {
         handleTokenExpired();
         return;
       }
-      
+
       // Check if error is due to insufficient permissions (403)
-      if (err?.status === 403 || err?.message?.includes("Acesso negado")) {
+      if (err?.status === 403 || err?.message?.includes('Acesso negado')) {
         handleForbidden();
         return;
       }
-      
+
       setError(`Erro ao excluir ${errorPrefix}`);
-      setResponse({ message: `Erro ao excluir ${errorPrefix}`, color: "bg-red-400" });
+      setResponse({
+        message: `Erro ao excluir ${errorPrefix}`,
+        color: 'bg-red-400',
+      });
     }
   };
 
@@ -201,22 +234,29 @@ export function GenericList<T extends ListItem>({
       const data = await service.getById(item.id);
       setSelectedItem(data);
     } catch (err: any) {
-      console.error("failed to load item details", err);
-      
+      console.error('failed to load item details', err);
+
       // Check if error is due to token expiration (401)
-      if (err?.isTokenExpired || err?.message?.includes("sessão expirou") || err?.status === 401) {
+      if (
+        err?.isTokenExpired ||
+        err?.message?.includes('sessão expirou') ||
+        err?.status === 401
+      ) {
         handleTokenExpired();
         return;
       }
-      
+
       // Check if error is due to insufficient permissions (403)
-      if (err?.status === 403 || err?.message?.includes("Acesso negado")) {
+      if (err?.status === 403 || err?.message?.includes('Acesso negado')) {
         handleForbidden();
         return;
       }
-      
+
       setError(`Erro ao carregar detalhes`);
-      setResponse({ message: `Erro ao carregar detalhes do ${errorPrefix}`, color: "bg-red-400" });
+      setResponse({
+        message: `Erro ao carregar detalhes do ${errorPrefix}`,
+        color: 'bg-red-400',
+      });
     } finally {
       setLoading(false);
     }
@@ -245,18 +285,23 @@ export function GenericList<T extends ListItem>({
         <FormResponse response={response} />
         <div
           className="grid gap-2 p-2 border rounded bg-gray-50 mt-4"
-          style={{ gridTemplateColumns: `repeat(${keys.length}, minmax(0,1fr))` }}
+          style={{
+            gridTemplateColumns: `repeat(${keys.length}, minmax(0,1fr))`,
+          }}
         >
           {keys.map((key) => (
             <div key={key} className="flex flex-col">
-              <label className="text-sm font-medium capitalize" htmlFor={`${key}-detail`}>
+              <label
+                className="text-sm font-medium capitalize"
+                htmlFor={`${key}-detail`}
+              >
                 {key}
               </label>
               <input
                 id={`${key}-detail`}
                 type="text"
                 readOnly
-                value={formatIfCurrency(key, (selectedItem as any)[key] ?? "")}
+                value={formatIfCurrency(key, (selectedItem as any)[key] ?? '')}
               />
             </div>
           ))}
@@ -278,7 +323,9 @@ export function GenericList<T extends ListItem>({
             <div
               key={item.id}
               className="grid gap-2 p-2 border rounded bg-gray-50"
-              style={{ gridTemplateColumns: `repeat(${allKeys.length + 1}, minmax(0,1fr))` }}
+              style={{
+                gridTemplateColumns: `repeat(${allKeys.length + 1}, minmax(0,1fr))`,
+              }}
             >
               {allKeys.map((key) => (
                 <div key={key} className="flex flex-col">
@@ -293,7 +340,7 @@ export function GenericList<T extends ListItem>({
                     type="text"
                     readOnly={!isEditing || disabledFields.includes(key)}
                     disabled={disabledFields.includes(key)}
-                    value={formatIfCurrency(key, rowData[key] ?? "")}
+                    value={formatIfCurrency(key, rowData[key] ?? '')}
                     onChange={(e) => {
                       if (!isEditing || disabledFields.includes(key)) return;
                       const val = e.target.value;
@@ -314,14 +361,24 @@ export function GenericList<T extends ListItem>({
                       className="hover:bg-green-50 transition"
                       onClick={() => saveEdit(item.id)}
                     >
-                      <Image src="/save.png" alt="Salvar" width={20} height={20} />
+                      <Image
+                        src="/save.png"
+                        alt="Salvar"
+                        width={20}
+                        height={20}
+                      />
                     </FormButton>
                     <FormButton
                       type="button"
                       className="hover:bg-red-50 transition"
                       onClick={() => cancelEdit(item.id)}
                     >
-                      <Image src="/cancel.png" alt="Cancelar" width={20} height={20} />
+                      <Image
+                        src="/cancel.png"
+                        alt="Cancelar"
+                        width={20}
+                        height={20}
+                      />
                     </FormButton>
                   </>
                 ) : (
@@ -331,21 +388,36 @@ export function GenericList<T extends ListItem>({
                       className="hover:bg-orange-50 transition"
                       onClick={() => detalheItem(item)}
                     >
-                      <Image src="/user.png" alt="Detalhar" width={20} height={20} />
+                      <Image
+                        src="/user.png"
+                        alt="Detalhar"
+                        width={20}
+                        height={20}
+                      />
                     </FormButton>
                     <FormButton
                       type="button"
                       className="hover:bg-yellow-50 transition"
                       onClick={() => startEdit(item)}
                     >
-                      <Image src="/edit.png" alt="Editar" width={20} height={20} />
+                      <Image
+                        src="/edit.png"
+                        alt="Editar"
+                        width={20}
+                        height={20}
+                      />
                     </FormButton>
                     <FormButton
                       type="button"
                       className="hover:bg-red-50 transition"
                       onClick={() => deleteItem(item.id)}
                     >
-                      <Image src="/lixeira.png" alt="Excluir" width={20} height={20} />
+                      <Image
+                        src="/lixeira.png"
+                        alt="Excluir"
+                        width={20}
+                        height={20}
+                      />
                     </FormButton>
                   </>
                 )}

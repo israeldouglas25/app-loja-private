@@ -1,11 +1,11 @@
-import Link from "next/link";
-import { Metadata } from "next";
+import Link from 'next/link';
+import { Metadata } from 'next';
 
-import { FormLogin } from "../../components/FormLogin";
-import { loginService } from "@/services/loginService";
-import { cookies } from "next/headers";
+import { FormLogin } from '../../components/FormLogin';
+import { loginService } from '@/services/loginService';
+import { cookies } from 'next/headers';
 
-const PAGE_TITLE = "Login de Usuários";
+const PAGE_TITLE = 'Login de Usuários';
 
 export const metadata: Metadata = {
   title: PAGE_TITLE,
@@ -13,13 +13,13 @@ export const metadata: Metadata = {
 
 export default function login() {
   const handlerLogin = async (_: string, formData: FormData) => {
-    "use server";
+    'use server';
 
-    const email = formData.get("email")?.toString();
-    const password = formData.get("password")?.toString();
+    const email = formData.get('email')?.toString();
+    const password = formData.get('password')?.toString();
 
     if (!email || !password) {
-      return { message: "Preencha todos os campos", color: "bg-red-400" };
+      return { message: 'Preencha todos os campos', color: 'bg-red-400' };
     }
 
     try {
@@ -29,30 +29,33 @@ export default function login() {
       });
 
       if (data.status) {
-        return { message: data.message || "Erro ao fazer login", color: "bg-red-400" };
+        return {
+          message: data.message || 'Erro ao fazer login',
+          color: 'bg-red-400',
+        };
       }
 
       // if we're running on the server, persist the token as a cookie
-      if (typeof window === "undefined" && data?.token) {
-        (await cookies()).set("token", data.token, {
+      if (typeof window === 'undefined' && data?.accessToken) {
+        (await cookies()).set('token', data.accessToken, {
           httpOnly: true,
-          path: "/",
-          sameSite: "lax",
+          path: '/',
+          sameSite: 'lax',
           maxAge: 60 * 60 * 24 * 7, // one week
         });
       }
 
       return {
-        message: data.message || "Login realizado com sucesso",
-        color: "bg-green-400",
+        message: data.message || 'Login realizado com sucesso',
+        color: 'bg-green-400',
         redirect: true,
-        token: data.token, // Include token so client can store it in localStorage
-        user: data.user || data, // backend may return user object directly
+        token: data.accessToken, // Include token so client can store it in localStorage
+        user: { name: data.name }, // backend returns name
+        expiresIn: data.expiresIn, // Include expiresIn for client to calculate expiration
       };
-
     } catch (error) {
-      console.error("handlerLogin failed:", error);
-      return { message: "Ocorreu um erro ao fazer login", color: "bg-red-400" };
+      console.error('handlerLogin failed:', error);
+      return { message: 'Ocorreu um erro ao fazer login', color: 'bg-red-400' };
     }
   };
 
@@ -62,7 +65,9 @@ export default function login() {
 
       <FormLogin action={handlerLogin} />
 
-      <Link className="text-center underline" href="/">Voltar para a página inicial</Link>
+      <Link className="text-center underline" href="/">
+        Voltar para a página inicial
+      </Link>
     </div>
   );
 }

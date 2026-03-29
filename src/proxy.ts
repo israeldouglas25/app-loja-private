@@ -6,7 +6,7 @@ import type { NextRequest } from "next/server";
  * We're only using it client-side to read the roles claim, so
  * a missing signature check is acceptable for UI routing purposes.
  */
-function decodeJwt(token: string): any {
+function decodeJwt(token: string): { roles?: string[]; authorities?: string[] } | null {
   try {
     const parts = token.split(".");
     if (parts.length < 2) return null;
