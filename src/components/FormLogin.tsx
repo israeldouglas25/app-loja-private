@@ -60,7 +60,7 @@ export const FormLogin: FC<FormLoginProps> = ({ action }) => {
     <>
       <FormResponse response={response} />
 
-      <form action={formAction} className="grid mt-4 mb-4 gap-y-2">
+      <form action={formAction} className="grid mt-4 mb-2 gap-y-2">
         <FormInput
           id="email"
           type="email"

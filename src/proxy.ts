@@ -61,6 +61,14 @@ function hasAccess(roles: string[], path: string, method: string): boolean {
   return roles.length > 0;
 }
 
+function isPublicUnauthenticatedPath(pathname: string): boolean {
+  return (
+    pathname === '/login' ||
+    pathname === '/users' ||
+    pathname.startsWith('/api/users')
+  );
+}
+
 export function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
@@ -69,6 +77,13 @@ export function proxy(req: NextRequest) {
     req.cookies.get('token')?.value ||
     (req.headers.get('authorization') || '').replace(/^Bearer\s+/, '') ||
     null;
+
+  if (!token) {
+    if (isPublicUnauthenticatedPath(pathname)) {
+      return NextResponse.next();
+    }
+    return NextResponse.redirect(new URL('/login', req.url));
+  }
 
   const payload = token ? decodeJwt(token) : null;
   const roles: string[] = payload

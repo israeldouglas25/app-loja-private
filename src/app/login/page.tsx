@@ -65,8 +65,8 @@ export default function login() {
 
       <FormLogin action={handlerLogin} />
 
-      <Link className="text-center underline" href="/">
-        Voltar para a página inicial
+      <Link className="text-center underline" href="/users">
+        Cadastrar usuário
       </Link>
     </div>
   );
