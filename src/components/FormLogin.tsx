@@ -7,9 +7,28 @@ import { FormInput } from './FormInput';
 import { FormButton } from './FormButton';
 import { FormResponse } from './FormResponse';
 
-type FormLoginProps = {
-  action: (_: string, formData: FormData) => Promise<any>;
+type User = {
+  id: string;
+  email: string;
+  name?: string;
 };
+
+type ActionState = {
+  message: string;
+  color: string;
+  user?: User;
+  token?: string;
+  expiresIn?: number;
+  redirect?: boolean;
+} | null;
+
+type FormLoginProps = {
+  action: (
+    prevState: ActionState,
+    formData: FormData
+  ) => Promise<ActionState>;
+};
+
 
 export const FormLogin: FC<FormLoginProps> = ({ action }) => {
   const [email, setEmail] = useState('');
@@ -30,7 +49,7 @@ export const FormLogin: FC<FormLoginProps> = ({ action }) => {
     // Store the token in localStorage after successful login
     if (response?.token) {
       localStorage.setItem('token', response.token);
-      console.log('Token armazenado no localStorage:', response.token);
+      console.log('Token armazenado no localStorage com sucesso:', response.token);
     }
 
     // Store the expiration timestamp
@@ -40,7 +59,6 @@ export const FormLogin: FC<FormLoginProps> = ({ action }) => {
       console.log('Token expires at:', new Date(expiresAt).toISOString());
     }
 
-    console.log('FormLogin response:', response);
     if (response?.redirect) {
       const timer = setTimeout(() => {
         router.push('/');
