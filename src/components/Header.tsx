@@ -40,8 +40,8 @@ export function Header() {
     };
 
     return (
-        <div className="bg-orange-500 fixed top-0 right-0 left-0 py-2 shadow-xl flex items-center justify-end px-4 gap-2">
-            <Link className="font-bold text-lg text-white absolute left-1/2 transform -translate-x-1/2" href="/">
+        <div className="bg-orange-500 fixed top-0 right-0 left-0 py-4 shadow-xl flex items-center justify-end px-4 gap-2">
+            <Link className="font-bold text-3xl text-white absolute left-1/2 transform -translate-x-1/2" href="/">
                 MAIS VARIEDADES
             </Link>
             {userName ? (
