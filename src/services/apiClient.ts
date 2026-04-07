@@ -43,6 +43,11 @@ function isTokenExpired(): boolean {
   return Date.now() > parseInt(tokenExpires, 10);
 }
 
+interface ApiError extends Error {
+  isTokenExpired?: boolean;
+  status?: number;
+}
+
 /**
  * Wrapper around fetch that automatically:
  *  - prefixes the correct base URL depending on execution context
@@ -51,16 +56,16 @@ function isTokenExpired(): boolean {
  *  - uses `credentials: 'include'` so cookies are sent if the backend sets them
  *  - checks if token has expired and throws an error if it has
  */
-export async function apiFetch(
+export async function apiFetch<T = unknown>(
   path: string,
   options: RequestInit = {}
-): Promise<any> {
+): Promise<T> {
   // Check if token has expired before making the request
   if (IS_BROWSER && isTokenExpired()) {
-    const error = new Error(
+    const error : ApiError = new Error(
       'Sua sessão expirou. Por favor, faça login novamente.'
     );
-    (error as any).isTokenExpired = true;
+    error.isTokenExpired = true;
     throw error;
   }
 
@@ -95,7 +100,7 @@ export async function apiFetch(
       return {
         status: res.status,
         message: 'Sessão expirada. Faça login novamente.',
-      };
+      } as T;
     }
   }
 
@@ -108,18 +113,18 @@ export async function apiFetch(
       const json = JSON.parse(text);
       errorMessage = json?.message || errorMessage;
     } catch {}
-    const error = new Error(errorMessage);
-    (error as any).status = res.status;
+    const error: ApiError = new Error(errorMessage);
+    error.status = res.status;
     throw error;
   }
 
   // you may want to handle 401/403 globally here
-  if (res.status === 204) return { status: 204 };
+  if (res.status === 204) return { status: 204 } as T; // No Content
   const text = await res.text();
-  if (!text) return { status: res.status };
+  if (!text) return { status: res.status } as T;
   try {
     return JSON.parse(text);
   } catch {
-    return { status: res.status, text };
+    return { status: res.status, text } as T;
   }
 }

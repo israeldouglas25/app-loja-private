@@ -2,10 +2,17 @@ import { apiFetch } from './apiClient';
 
 const TOKEN_EXPIRES_KEY = 'tokenExpires';
 
+interface LoginResponse {
+  accessToken: string;
+  tokenType: string;
+  name: string;
+  expiresIn: number;
+}
+
 export const loginService = {
   // POST - login usuário
   login: async (data: { email: string; password: string }) => {
-    const response = await apiFetch('/login', {
+    const response = await apiFetch<LoginResponse>('/login', {
       method: 'POST',
       body: JSON.stringify(data),
       // credentials: 'include' already set by apiFetch, useful if backend

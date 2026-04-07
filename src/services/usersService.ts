@@ -1,5 +1,10 @@
 import { apiFetch } from "./apiClient";
 
+interface User {
+  name: string;
+  email: string;
+}
+
 export const usersService = {
   // GET - Listar todos
   getAll: async () => apiFetch("/users", { method: "GET" }),
@@ -12,11 +17,11 @@ export const usersService = {
     apiFetch("/users", { method: "POST", body: JSON.stringify(data) }),
 
   // PUT - Atualizar completamente
-  update: async (id: number, data: any) =>
+  update: async (id: number, data: User) =>
     apiFetch(`/users/${id}`, { method: "PUT", body: JSON.stringify(data) }),
 
   // PATCH - Atualizar parcialmente
-  partialUpdate: async (id: number, data: any) =>
+  partialUpdate: async (id: number, data: Partial<User>) =>
     apiFetch(`/users/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
 
   // DELETE - Deletar
