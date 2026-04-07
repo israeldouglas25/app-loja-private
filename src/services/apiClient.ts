@@ -100,15 +100,17 @@ export async function apiFetch(
   }
 
   // Handle 403 (Forbidden) - user doesn't have permission, but token is valid
-  // Don't clear token, just return the error
+  // Don't clear token, throw an error so callers can display the proper message.
   if (res.status === 403) {
     const text = await res.text();
     let errorMessage = 'Acesso negado. Você não tem permissão para esta ação.';
     try {
       const json = JSON.parse(text);
-      errorMessage = json.message || errorMessage;
+      errorMessage = json?.message || errorMessage;
     } catch {}
-    return { status: res.status, message: errorMessage };
+    const error = new Error(errorMessage);
+    (error as any).status = res.status;
+    throw error;
   }
 
   // you may want to handle 401/403 globally here

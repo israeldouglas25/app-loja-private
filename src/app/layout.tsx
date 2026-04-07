@@ -21,7 +21,7 @@ export default function RootLayout({
 
         <main className="pt-10 mt-14 mb-14 flex justify-center">{children}</main>
 
-        <footer className="fixed bottom-0 left-0 right-0 text-center mt-12 relative">
+        <footer className="bottom-0 left-0 right-0 text-center mt-12 relative">
           <p className="text-sm">© 2026 App Loja. Todos os direitos reservados.</p>
           <p className="text-xs">Israel Douglas</p>
         </footer>

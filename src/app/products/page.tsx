@@ -40,7 +40,7 @@ export default function Products() {
 
     } catch (error) {
       console.error("handlerProducts failed:", error);
-      return { message: "Ocorreu um erro ao cadastrar o produto", color: "bg-red-400" };
+      return { message: "Permissão negada ou erro ao cadastrar o produto.", color: "bg-red-400" };
     }
   };
 
