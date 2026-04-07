@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { FormResponse } from '../components/FormResponse';
@@ -8,7 +8,7 @@ import { formatIfCurrency } from './currencyFormatter';
 
 export interface TableItem {
   id: number;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface TableService<T extends TableItem> {
@@ -27,8 +27,18 @@ export interface GenericTableProps<T extends TableItem> {
   loadingMessage?: string;
   emptyMessage?: string;
   errorPrefix?: string;
-  visibleFields?: string[]; // specify which fields to display in table
-  columnLabels?: Record<string, string>; // custom labels for columns (e.g., { name: "Nome", unitValue: "Valor Unitário" })
+  visibleFields?: string[];
+  columnLabels?: Record<string, string>;
+}
+
+interface ApiError {
+  isTokenExpired?: boolean;
+  status?: number;
+  message?: string;
+}
+
+function isApiError(err: unknown): err is ApiError {
+  return typeof err === 'object' && err !== null;
 }
 
 export function GenericTable<T extends TableItem>({
@@ -50,7 +60,6 @@ export function GenericTable<T extends TableItem>({
     message: string;
     color: string;
   } | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [editing, setEditing] = useState<{ [id: number]: T }>({});
 
@@ -61,104 +70,72 @@ export function GenericTable<T extends TableItem>({
     }
   }, [response]);
 
-  const handleTokenExpired = () => {
-    router.push('/login');
-  };
+  const handleError = useCallback(
+    (err: unknown, context: string) => {
+      console.error(context, err);
+      if (isApiError(err)) {
+        if (
+          err.isTokenExpired ||
+          err.message?.includes('sessão expirou') ||
+          err.status === 401
+        ) {
+          router.push('/login');
+          return;
+        }
+        if (err.status === 403 || err.message?.includes('Acesso negado')) {
+          setResponse({
+            message: 'Acesso negado. Você não tem permissão para esta ação.',
+            color: 'bg-red-400',
+          });
+          return;
+        }
+      }
+      setResponse({ message: `Erro: ${context}`, color: 'bg-red-400' });
+    },
+    [router]
+  );
 
-  const handleForbidden = () => {
-    setResponse({
-      message: 'Acesso negado. Você não tem permissão para esta ação.',
-      color: 'bg-red-400',
-    });
-  };
-
-  const getColumnLabel = (fieldName: string): string => {
-    return (
-      columnLabels[fieldName] ||
-      fieldName.charAt(0).toUpperCase() + fieldName.slice(1)
-    );
-  };
-
-  const load = async () => {
+  const loadItems = useCallback(async () => {
     try {
       const data = await service.getAll();
-      const items = dataField ? (data as any)[dataField] : (data as T[]);
+      const items = dataField
+        ? (data as Record<string, T[]>)[dataField]
+        : (data as T[]);
       setItems(Array.isArray(items) ? items : []);
-      return Array.isArray(items) ? items : [];
-    } catch (err: any) {
-      if (
-        err?.isTokenExpired ||
-        err?.message?.includes('sessão expirou') ||
-        err?.status === 401
-      ) {
-        handleTokenExpired();
-        return undefined;
-      }
-
-      if (err?.status === 403 || err?.message?.includes('Acesso negado')) {
-        handleForbidden();
-        return undefined;
-      }
-
-      setError(`Erro ao carregar lista`);
-      setResponse({ message: `Erro ao carregar lista`, color: 'bg-red-400' });
-      return undefined;
+    } catch (err) {
+      handleError(err, 'ao carregar lista');
     } finally {
       setLoading(false);
     }
-  };
+  }, [service, dataField, handleError]);
 
   useEffect(() => {
-    load();
-  }, []);
+    loadItems();
+  }, [loadItems]);
 
-  const startEdit = (item: T) => {
+  const startEdit = (item: T) =>
     setEditing((e) => ({ ...e, [item.id]: { ...item } }));
-  };
 
-  const cancelEdit = (id: number) => {
+  const cancelEdit = (id: number) =>
     setEditing((e) => {
       const clone = { ...e };
       delete clone[id];
       return clone;
     });
-  };
 
   const saveEdit = async (id: number) => {
+    const updated = editing[id];
+    if (!updated) return;
     try {
-      const updated = editing[id];
-      if (!updated) return;
       await service.update(id, updated);
-      const data = await load();
-      if (data) {
-        const totalPages = Math.max(1, Math.ceil(data.length / pageSize));
-        setPage((p) => Math.min(p, totalPages));
-      }
+      await loadItems();
       cancelEdit(id);
       setResponse({
         message: `${errorPrefix} atualizado com sucesso`,
         color: 'bg-green-400',
       });
-    } catch (err: any) {
-      if (
-        err?.isTokenExpired ||
-        err?.message?.includes('sessão expirou') ||
-        err?.status === 401
-      ) {
-        handleTokenExpired();
-        return;
-      }
-
-      if (err?.status === 403 || err?.message?.includes('Acesso negado')) {
-        handleForbidden();
-        return;
-      }
-
-      setError(`Erro ao atualizar ${errorPrefix}`);
-      setResponse({
-        message: `Erro ao atualizar ${errorPrefix}`,
-        color: 'bg-red-400',
-      });
+    } catch (err) {
+      handleError(err, 'ao atualizar item');
     }
   };
 
@@ -166,35 +143,13 @@ export function GenericTable<T extends TableItem>({
     if (!confirm(`Tem certeza que deseja excluir este ${errorPrefix}?`)) return;
     try {
       await service.delete(id);
-      const data = await load();
-      if (data) {
-        const totalPages = Math.max(1, Math.ceil(data.length / pageSize));
-        setPage((p) => Math.min(p, totalPages));
-      }
+      await loadItems();
       setResponse({
         message: `${errorPrefix} excluído com sucesso`,
         color: 'bg-green-400',
       });
-    } catch (err: any) {
-      if (
-        err?.isTokenExpired ||
-        err?.message?.includes('sessão expirou') ||
-        err?.status === 401
-      ) {
-        handleTokenExpired();
-        return;
-      }
-
-      if (err?.status === 403 || err?.message?.includes('Acesso negado')) {
-        handleForbidden();
-        return;
-      }
-
-      setError(`Erro ao excluir ${errorPrefix}`);
-      setResponse({
-        message: `Erro ao excluir ${errorPrefix}`,
-        color: 'bg-red-400',
-      });
+    } catch (err) {
+      handleError(err, 'ao excluir item');
     }
   };
 
@@ -202,15 +157,16 @@ export function GenericTable<T extends TableItem>({
   const pageItems = items.slice(startIndex, startIndex + pageSize);
   const totalPages = Math.ceil(items.length / pageSize);
 
-  // Determine which columns to display
   const allKeys = Array.from(new Set(items.flatMap((u) => Object.keys(u))));
   const displayKeys = visibleFields
     ? visibleFields.filter((k) => allKeys.includes(k))
     : allKeys;
 
-  if (loading) return <p className="text-center py-4">{loadingMessage}</p>;
-  if (error) return <p className="text-center text-red-500 py-4">{error}</p>;
+  const getColumnLabel = (fieldName: string) =>
+    columnLabels[fieldName] ||
+    fieldName.charAt(0).toUpperCase() + fieldName.slice(1);
 
+  if (loading) return <p className="text-center py-4">{loadingMessage}</p>;
   if (items.length === 0)
     return <p className="text-center py-4">{emptyMessage}</p>;
 
@@ -238,8 +194,8 @@ export function GenericTable<T extends TableItem>({
           </thead>
           <tbody>
             {pageItems.map((item, index) => {
-              const isEditing = editing[item.id] !== undefined;
-              const rowData = isEditing ? editing[item.id]! : item;
+              const isEditing = !!editing[item.id];
+              const rowData = editing[item.id] || item;
 
               return (
                 <tr
@@ -252,14 +208,16 @@ export function GenericTable<T extends TableItem>({
                         <input
                           type="text"
                           className="w-full p-1 border rounded"
-                          value={rowData[key] ?? ''}
-                          onChange={(e) => {
-                            const val = e.target.value;
-                            setEditing((e) => ({
-                              ...e,
-                              [item.id]: { ...e[item.id], [key]: val },
-                            }));
-                          }}
+                          value={String(rowData[key] ?? '')}
+                          onChange={(e) =>
+                            setEditing((prev) => ({
+                              ...prev,
+                              [item.id]: {
+                                ...prev[item.id],
+                                [key]: e.target.value,
+                              },
+                            }))
+                          }
                         />
                       ) : (
                         <span>{formatIfCurrency(key, rowData[key] ?? '')}</span>
@@ -271,7 +229,6 @@ export function GenericTable<T extends TableItem>({
                       {isEditing ? (
                         <>
                           <button
-                            type="button"
                             onClick={() => saveEdit(item.id)}
                             className="p-1 hover:bg-green-100 rounded transition"
                             title="Salvar"
@@ -284,7 +241,6 @@ export function GenericTable<T extends TableItem>({
                             />
                           </button>
                           <button
-                            type="button"
                             onClick={() => cancelEdit(item.id)}
                             className="p-1 hover:bg-red-100 rounded transition"
                             title="Cancelar"
@@ -300,7 +256,6 @@ export function GenericTable<T extends TableItem>({
                       ) : (
                         <>
                           <button
-                            type="button"
                             onClick={() => startEdit(item)}
                             className="p-1 hover:bg-yellow-100 rounded transition"
                             title="Editar"
@@ -313,7 +268,6 @@ export function GenericTable<T extends TableItem>({
                             />
                           </button>
                           <button
-                            type="button"
                             onClick={() => deleteItem(item.id)}
                             className="p-1 hover:bg-red-100 rounded transition"
                             title="Excluir"

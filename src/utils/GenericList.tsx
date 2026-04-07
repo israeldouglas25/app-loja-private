@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { FormResponse } from '../components/FormResponse';
@@ -10,7 +10,7 @@ import { formatIfCurrency } from './currencyFormatter';
 
 export interface ListItem {
   id: number;
-  [key: string]: any;
+  [key: string]: string | number | boolean | null | undefined;
 }
 
 export interface ListService<T extends ListItem> {
@@ -22,18 +22,26 @@ export interface ListService<T extends ListItem> {
 
 export interface GenericListProps<T extends ListItem> {
   service: ListService<T>;
-  title: string;
   pageSize?: number;
-  dataField?: string; // field name if response is wrapped (e.g., "users", "products")
-  disabledFields?: string[]; // fields to disable when editing (default includes "id")
+  dataField?: string;
+  disabledFields?: string[];
   loadingMessage?: string;
   emptyMessage?: string;
   errorPrefix?: string;
 }
 
+interface ApiError {
+  isTokenExpired?: boolean;
+  status?: number;
+  message?: string;
+}
+
+function isApiError(err: unknown): err is ApiError {
+  return typeof err === 'object' && err !== null;
+}
+
 export function GenericList<T extends ListItem>({
   service,
-  title,
   pageSize = 5,
   dataField,
   disabledFields = ['id'],
@@ -48,9 +56,10 @@ export function GenericList<T extends ListItem>({
     message: string;
     color: string;
   } | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [editing, setEditing] = useState<Record<number, Partial<T>>>({});
+  const [selectedItem, setSelectedItem] = useState<T | null>(null);
 
-  // clear response after 3 seconds
   useEffect(() => {
     if (response) {
       const timer = setTimeout(() => setResponse(null), 3000);
@@ -58,132 +67,79 @@ export function GenericList<T extends ListItem>({
     }
   }, [response]);
 
-  // pagination
-  const [page, setPage] = useState(1);
+  const handleError = useCallback(
+    (err: unknown, context: string) => {
+      console.error(context, err);
+      if (isApiError(err)) {
+        if (
+          err.isTokenExpired ||
+          err.message?.includes('sessão expirou') ||
+          err.status === 401
+        ) {
+          localStorage.removeItem('token');
+          localStorage.removeItem('tokenExpires');
+          document.cookie = 'token=; path=/; max-age=0; sameSite=lax';
+          setResponse({
+            message: 'Sua sessão expirou. Redirecionando...',
+            color: 'bg-yellow-400',
+          });
+          setTimeout(() => router.push('/login'), 2000);
+          return;
+        }
+        if (err.status === 403 || err.message?.includes('Acesso negado')) {
+          setResponse({
+            message: 'Acesso negado. Você não tem permissão para esta ação.',
+            color: 'bg-red-400',
+          });
+          return;
+        }
+      }
+      setResponse({ message: `Erro: ${context}`, color: 'bg-red-400' });
+    },
+    [router]
+  );
 
-  // editing state
-  const [editing, setEditing] = useState<Record<number, Partial<T>>>({});
-  // hold a single item when the "Detalhar" button is clicked
-  const [selectedItem, setSelectedItem] = useState<T | null>(null);
-
-  const handleTokenExpired = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('tokenExpires');
-    document.cookie = 'token=; path=/; max-age=0; sameSite=lax';
-    setResponse({
-      message: 'Sua sessão expirou. Redirecionando...',
-      color: 'bg-yellow-400',
-    });
-    setTimeout(() => router.push('/login'), 2000);
-  };
-
-  const handleForbidden = () => {
-    setResponse({
-      message: 'Acesso negado. Você não tem permissão para esta ação.',
-      color: 'bg-red-400',
-    });
-  };
-
-  const load = async (): Promise<T[] | undefined> => {
+  const loadItems = useCallback(async () => {
     setLoading(true);
     try {
       const data = await service.getAll();
-      let arr: T[] = [];
-      if (Array.isArray(data)) {
-        arr = data as T[];
-      } else if (data && typeof data === 'object' && dataField) {
-        arr = (data as any)[dataField] as T[];
-      } else if (data && typeof data === 'object') {
-        // try to find array field automatically
-        const values = Object.values(data);
-        const arrayField = values.find((v) => Array.isArray(v));
-        arr = (arrayField || []) as T[];
-      } else {
-        console.warn('unexpected response', data);
-      }
-
-      setItems(arr);
-      return arr;
-    } catch (err: any) {
-      console.error('failed to load items', err);
-
-      // Check if error is due to token expiration (401)
-      if (
-        err?.isTokenExpired ||
-        err?.message?.includes('sessão expirou') ||
-        err?.status === 401
-      ) {
-        handleTokenExpired();
-        return undefined;
-      }
-
-      // Check if error is due to insufficient permissions (403)
-      if (err?.status === 403 || err?.message?.includes('Acesso negado')) {
-        handleForbidden();
-        return undefined;
-      }
-
-      setError(`Erro ao carregar lista`);
-      setResponse({ message: `Erro ao carregar lista`, color: 'bg-red-400' });
-      return undefined;
+      const arr = dataField
+        ? (data as Record<string, T[]>)[dataField]
+        : (data as T[]);
+      setItems(Array.isArray(arr) ? arr : []);
+    } catch (err) {
+      handleError(err, 'ao carregar lista');
     } finally {
       setLoading(false);
     }
-  };
+  }, [service, dataField, handleError]);
 
   useEffect(() => {
-    load();
-  }, []);
+    loadItems();
+  }, [loadItems]);
 
-  const startEdit = (item: T) => {
+  const startEdit = (item: T) =>
     setEditing((e) => ({ ...e, [item.id]: { ...item } }));
-  };
-  const cancelEdit = (id: number) => {
+  const cancelEdit = (id: number) =>
     setEditing((e) => {
       const clone = { ...e };
       delete clone[id];
       return clone;
     });
-  };
+
   const saveEdit = async (id: number) => {
+    const updated = editing[id];
+    if (!updated) return;
     try {
-      const updated = editing[id];
-      if (!updated) return;
       await service.update(id, updated);
-      const data = await load();
-      if (data) {
-        const totalPages = Math.max(1, Math.ceil(data.length / pageSize));
-        setPage((p) => Math.min(p, totalPages));
-      }
+      await loadItems();
       cancelEdit(id);
       setResponse({
         message: `${errorPrefix} atualizado com sucesso`,
         color: 'bg-green-400',
       });
-    } catch (err: any) {
-      console.error('update failed', err);
-
-      // Check if error is due to token expiration (401)
-      if (
-        err?.isTokenExpired ||
-        err?.message?.includes('sessão expirou') ||
-        err?.status === 401
-      ) {
-        handleTokenExpired();
-        return;
-      }
-
-      // Check if error is due to insufficient permissions (403)
-      if (err?.status === 403 || err?.message?.includes('Acesso negado')) {
-        handleForbidden();
-        return;
-      }
-
-      setError(`Erro ao atualizar ${errorPrefix}`);
-      setResponse({
-        message: `Erro ao atualizar ${errorPrefix}`,
-        color: 'bg-red-400',
-      });
+    } catch (err) {
+      handleError(err, 'ao atualizar item');
     }
   };
 
@@ -191,72 +147,23 @@ export function GenericList<T extends ListItem>({
     if (!confirm(`Tem certeza que deseja excluir este ${errorPrefix}?`)) return;
     try {
       await service.delete(id);
-      const data = await load();
-      if (data) {
-        const totalPages = Math.max(1, Math.ceil(data.length / pageSize));
-        setPage((p) => Math.min(p, totalPages));
-      }
+      await loadItems();
       setResponse({
         message: `${errorPrefix} excluído com sucesso`,
         color: 'bg-green-400',
       });
-    } catch (err: any) {
-      console.error('delete failed', err);
-
-      // Check if error is due to token expiration (401)
-      if (
-        err?.isTokenExpired ||
-        err?.message?.includes('sessão expirou') ||
-        err?.status === 401
-      ) {
-        handleTokenExpired();
-        return;
-      }
-
-      // Check if error is due to insufficient permissions (403)
-      if (err?.status === 403 || err?.message?.includes('Acesso negado')) {
-        handleForbidden();
-        return;
-      }
-
-      setError(`Erro ao excluir ${errorPrefix}`);
-      setResponse({
-        message: `Erro ao excluir ${errorPrefix}`,
-        color: 'bg-red-400',
-      });
+    } catch (err) {
+      handleError(err, 'ao excluir item');
     }
   };
 
-  // handler invoked when user clicks "Detalhar" button
   const detalheItem = async (item: T) => {
     setLoading(true);
     try {
       const data = await service.getById(item.id);
       setSelectedItem(data);
-    } catch (err: any) {
-      console.error('failed to load item details', err);
-
-      // Check if error is due to token expiration (401)
-      if (
-        err?.isTokenExpired ||
-        err?.message?.includes('sessão expirou') ||
-        err?.status === 401
-      ) {
-        handleTokenExpired();
-        return;
-      }
-
-      // Check if error is due to insufficient permissions (403)
-      if (err?.status === 403 || err?.message?.includes('Acesso negado')) {
-        handleForbidden();
-        return;
-      }
-
-      setError(`Erro ao carregar detalhes`);
-      setResponse({
-        message: `Erro ao carregar detalhes do ${errorPrefix}`,
-        color: 'bg-red-400',
-      });
+    } catch (err) {
+      handleError(err, 'ao carregar detalhes do item');
     } finally {
       setLoading(false);
     }
@@ -265,21 +172,18 @@ export function GenericList<T extends ListItem>({
   const startIndex = (page - 1) * pageSize;
   const pageItems = items.slice(startIndex, startIndex + pageSize);
   const totalPages = Math.ceil(items.length / pageSize);
-
-  // build list of all keys for dynamic columns
   const allKeys = Array.from(new Set(items.flatMap((u) => Object.keys(u))));
 
   if (loading) return <p className="text-center">{loadingMessage}</p>;
-  if (error) return <p className="text-center text-red-500">{error}</p>;
+  if (items.length === 0) return <p className="text-center">{emptyMessage}</p>;
 
-  // when an item has been selected for detail, show modal component
   if (selectedItem) {
-    const keys = Array.from(new Set(Object.keys(selectedItem)));
+    const keys = Object.keys(selectedItem);
     return (
       <Modal
         onClose={() => {
           setSelectedItem(null);
-          load();
+          loadItems();
         }}
       >
         <FormResponse response={response} />
@@ -301,7 +205,7 @@ export function GenericList<T extends ListItem>({
                 id={`${key}-detail`}
                 type="text"
                 readOnly
-                value={formatIfCurrency(key, (selectedItem as any)[key] ?? '')}
+                value={formatIfCurrency(key, selectedItem[key] ?? '')}
               />
             </div>
           ))}
@@ -310,15 +214,13 @@ export function GenericList<T extends ListItem>({
     );
   }
 
-  if (items.length === 0) return <p className="text-center">{emptyMessage}</p>;
-
   return (
     <div className="mt-6">
       <FormResponse response={response} />
       <form className="grid gap-2">
         {pageItems.map((item) => {
-          const isEditing = editing[item.id] !== undefined;
-          const rowData = isEditing ? editing[item.id]! : item;
+          const isEditing = !!editing[item.id];
+          const rowData = editing[item.id] || item;
           return (
             <div
               key={item.id}
@@ -343,16 +245,14 @@ export function GenericList<T extends ListItem>({
                     value={formatIfCurrency(key, rowData[key] ?? '')}
                     onChange={(e) => {
                       if (!isEditing || disabledFields.includes(key)) return;
-                      const val = e.target.value;
-                      setEditing((e) => ({
-                        ...e,
-                        [item.id]: { ...e[item.id], [key]: val },
+                      setEditing((prev) => ({
+                        ...prev,
+                        [item.id]: { ...prev[item.id], [key]: e.target.value },
                       }));
                     }}
                   />
                 </div>
               ))}
-
               <div className="flex items-center gap-2 justify-end">
                 {isEditing ? (
                   <>
@@ -426,7 +326,6 @@ export function GenericList<T extends ListItem>({
           );
         })}
       </form>
-
       {totalPages > 1 && (
         <div className="flex justify-center space-x-4 mt-4">
           <FormButton
