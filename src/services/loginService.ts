@@ -7,6 +7,7 @@ interface LoginResponse {
   tokenType: string;
   name: string;
   expiresIn: number;
+  id?: number;
 }
 
 export const loginService = {
@@ -30,7 +31,7 @@ export const loginService = {
         const expiresAt = Date.now() + response.expiresIn * 1000;
         localStorage.setItem(TOKEN_EXPIRES_KEY, expiresAt.toString());
         // Store user name
-        localStorage.setItem('user', JSON.stringify({ name: response.name }));
+        localStorage.setItem('user', JSON.stringify({ name: response.name, id: response.id }));
         // mirror token into cookie so that server actions can read it later
         document.cookie = `token=${response.accessToken}; path=/; max-age=${60 * 60 * 24 * 7}; sameSite=lax`;
       }

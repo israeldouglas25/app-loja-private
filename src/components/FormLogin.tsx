@@ -8,12 +8,12 @@ import { FormButton } from './FormButton';
 import { FormResponse } from './FormResponse';
 
 type User = {
-  id: string;
-  email: string;
+  id?: string | number;
+  email?: string;
   name?: string;
 };
 
-type ActionState = {
+export type ActionState = {
   message: string;
   color: string;
   user?: User;
@@ -23,12 +23,8 @@ type ActionState = {
 } | null;
 
 type FormLoginProps = {
-  action: (
-    prevState: ActionState,
-    formData: FormData
-  ) => Promise<ActionState>;
+  action: (prevState: ActionState, formData: FormData) => Promise<ActionState>;
 };
-
 
 export const FormLogin: FC<FormLoginProps> = ({ action }) => {
   const [email, setEmail] = useState('');
@@ -49,7 +45,10 @@ export const FormLogin: FC<FormLoginProps> = ({ action }) => {
     // Store the token in localStorage after successful login
     if (response?.token) {
       localStorage.setItem('token', response.token);
-      console.log('Token armazenado no localStorage com sucesso:', response.token);
+      console.log(
+        'Token armazenado no localStorage com sucesso:',
+        response.token
+      );
     }
 
     // Store the expiration timestamp

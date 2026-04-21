@@ -1,10 +1,10 @@
-import Link from "next/link";
-import { Metadata } from "next";
+import Link from 'next/link';
+import { Metadata } from 'next';
 
-import { FormUsers } from "../../components/FormUsers";
-import { usersService } from "../../services/usersService";
+import { FormUsers } from '../../components/FormUsers';
+import { usersService } from '../../services/usersService';
 
-const PAGE_TITLE = "Cadastro de Usuários";
+const PAGE_TITLE = 'Cadastro de Usuários';
 
 export const metadata: Metadata = {
   title: PAGE_TITLE,
@@ -12,14 +12,14 @@ export const metadata: Metadata = {
 
 export default function Users() {
   const handlerUsers = async (_: string, formData: FormData) => {
-    "use server";
+    'use server';
 
-    const username = formData.get("username")?.toString();
-    const email = formData.get("email")?.toString();
-    const password = formData.get("password")?.toString();
+    const username = formData.get('username')?.toString();
+    const email = formData.get('email')?.toString();
+    const password = formData.get('password')?.toString();
 
     if (!username || !email || !password) {
-      return { message: "Preencha todos os campos", color: "bg-red-400" };
+      return { message: 'Preencha todos os campos', color: 'bg-red-400' };
     }
 
     try {
@@ -29,15 +29,24 @@ export default function Users() {
         password: password,
       });
 
-      if (data.status) {
-        return { message: data.message || "Erro ao cadastrar usuário", color: "bg-red-400" };
+      if (!data?.id) {
+        return {
+          message: 'Erro ao cadastrar usuário',
+          color: 'bg-red-400',
+        };
       }
 
-      return { message: data.message || "Usuário cadastrado com sucesso", color: "bg-green-400", redirect: true };
-
+      return {
+        message: 'Usuário cadastrado com sucesso',
+        color: 'bg-green-400',
+        redirect: true,
+      };
     } catch (error) {
-      console.error("handlerUsers failed:", error);
-      return { message: "Ocorreu um erro ao cadastrar o usuário", color: "bg-red-400" };
+      console.error('handlerUsers failed:', error);
+      return {
+        message: 'Ocorreu um erro ao cadastrar o usuário',
+        color: 'bg-red-400',
+      };
     }
   };
 
@@ -47,7 +56,9 @@ export default function Users() {
 
       <FormUsers action={handlerUsers} />
 
-      <Link className="text-center underline" href="/login">Já tenho cadastro</Link>
+      <Link className="text-center underline" href="/login">
+        Já tenho cadastro
+      </Link>
     </div>
   );
 }

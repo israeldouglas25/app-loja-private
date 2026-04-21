@@ -5,6 +5,8 @@ import { FormLogin } from '../../components/FormLogin';
 import { loginService } from '@/services/loginService';
 import { cookies } from 'next/headers';
 
+import type { ActionState } from '../../components/FormLogin';
+
 const PAGE_TITLE = 'Login de Usuários';
 
 export const metadata: Metadata = {
@@ -12,7 +14,7 @@ export const metadata: Metadata = {
 };
 
 export default function login() {
-  const handlerLogin = async (_: string, formData: FormData) => {
+  const handlerLogin = async (__prevState: ActionState, formData: FormData):Promise<ActionState> => {
     'use server';
 
     const email = formData.get('email')?.toString();
@@ -28,9 +30,9 @@ export default function login() {
         password: password,
       });
 
-      if (data.status) {
+      if (!data?.accessToken) {
         return {
-          message: data.message || 'Erro ao fazer login',
+          message: 'Erro ao fazer login',
           color: 'bg-red-400',
         };
       }
@@ -46,11 +48,11 @@ export default function login() {
       }
 
       return {
-        message: data.message || 'Login realizado com sucesso',
+        message: 'Login realizado com sucesso',
         color: 'bg-green-400',
         redirect: true,
         token: data.accessToken, // Include token so client can store it in localStorage
-        user: { name: data.name }, // backend returns name
+        user: { name: data.name, id: data.id }, // backend may return user id
         expiresIn: data.expiresIn, // Include expiresIn for client to calculate expiration
       };
     } catch (error) {

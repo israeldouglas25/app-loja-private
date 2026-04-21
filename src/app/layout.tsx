@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import "./globals.css";
 import { Header } from "@/components/Header";
+import { Sidebar } from "@/components/Sidebar";
 
 const PAGE_TITLE = "App Loja";
 
@@ -18,6 +19,7 @@ export default function RootLayout({
     <html lang="pt-BR">
       <body className="">
         <Header />
+        {/* <Sidebar /> */}
 
         <main className="pt-10 mt-14 mb-14 flex justify-center">{children}</main>
 

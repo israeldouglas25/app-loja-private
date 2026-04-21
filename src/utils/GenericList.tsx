@@ -22,6 +22,7 @@ export interface ListService<T extends ListItem> {
 
 export interface GenericListProps<T extends ListItem> {
   service: ListService<T>;
+  title?: string;
   pageSize?: number;
   dataField?: string;
   disabledFields?: string[];

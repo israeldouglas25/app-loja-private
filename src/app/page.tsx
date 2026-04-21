@@ -9,11 +9,6 @@ export default function Home() {
 
   const menuItems = [
     {
-      label: 'Adicionar carrinho',
-      icon: '/adicionar-ao-carrinho.png',
-      route: '/products',
-    },
-    {
       label: 'Adicionar produto',
       icon: '/adicionar-produto.png',
       route: '/products',
@@ -22,6 +17,11 @@ export default function Home() {
       label: 'Listar produtos',
       icon: '/listar-produtos.png',
       route: '/products/list',
+    },
+    {
+      label: 'Novo pedido',
+      icon: '/adicionar-ao-carrinho.png',
+      route: '/orders',
     },
     {
       label: 'Listar usuários',

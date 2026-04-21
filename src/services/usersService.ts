@@ -1,29 +1,47 @@
-import { apiFetch } from "./apiClient";
+import { apiFetch } from './apiClient';
 
-interface User {
+export interface User {
+  id: number;
   name: string;
   email: string;
 }
 
+export type UserCreateDto = {
+  name: string;
+  email: string;
+  password: string;
+};
+
 export const usersService = {
   // GET - Listar todos
-  getAll: async () => apiFetch("/users", { method: "GET" }),
+  getAll: async () => apiFetch<User[]>('/users', { method: 'GET' }),
 
   // GET - Buscar por ID
-  getById: async (id: number) => apiFetch(`/users/${id}`, { method: "GET" }),
+  getById: async (id: number) =>
+    apiFetch<User>(`/users/${id}`, { method: 'GET' }),
 
   // POST - Criar usuário
-  create: async (data: { name: string; email: string; password: string }) =>
-    apiFetch("/users", { method: "POST", body: JSON.stringify(data) }),
+  create: async (data: UserCreateDto) =>
+    apiFetch<User>('/users', { method: 'POST', body: JSON.stringify(data) }),
 
   // PUT - Atualizar completamente
-  update: async (id: number, data: User) =>
-    apiFetch(`/users/${id}`, { method: "PUT", body: JSON.stringify(data) }),
+  update: async (id: number, data: Partial<User>) => {
+    await apiFetch(`/users/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  },
 
   // PATCH - Atualizar parcialmente
-  partialUpdate: async (id: number, data: Partial<User>) =>
-    apiFetch(`/users/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
+  partialUpdate: async (id: number, data: Partial<User>) => {
+    await apiFetch(`/users/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  },
 
   // DELETE - Deletar
-  delete: async (id: number) => apiFetch(`/users/${id}`, { method: "DELETE" }),
+  delete: async (id: number) => {
+    await apiFetch(`/users/${id}`, { method: 'DELETE' });
+  },
 };
