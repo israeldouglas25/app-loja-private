@@ -9,7 +9,6 @@ export type Product = {
   stockQuantity: number;
   category: string;
   unitValue: number;
-  [key: string]: any;
 };
 
 export function FormProductsList() {

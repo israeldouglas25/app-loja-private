@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { FormButton } from './FormButton';
 import { FormInput } from './FormInput';
 import { FormResponse } from './FormResponse';
@@ -90,7 +90,7 @@ export function FormOrder() {
     });
   };
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.SyntheticEvent<HTMLFormElement, SubmitEvent>) => {
     event.preventDefault();
     setResponse(null);
 
@@ -115,7 +115,7 @@ export function FormOrder() {
 
       if (result && typeof result === 'object' && 'status' in result && 'message' in result) {
         setResponse({
-          message: 'Erro ao criar o pedido.',
+          message: '' + result.message,
           color: 'bg-red-400',
         });
       } else {

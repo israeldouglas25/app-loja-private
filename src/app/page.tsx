@@ -9,6 +9,11 @@ export default function Home() {
 
   const menuItems = [
     {
+      label: 'Categoria',
+      icon: '/categoria.png',
+      route: '/categories',
+    },
+    {
       label: 'Adicionar produto',
       icon: '/adicionar-produto.png',
       route: '/products',
