@@ -3,9 +3,8 @@ import { NextRequest, NextResponse } from 'next/server';
 const API_BASE_URL = process.env.BACKEND_URL || 'http://localhost:8080/api/v1';
 
 export async function GET(req: NextRequest) {
-  // simply proxy GET /api/users to backend
-  const backendRes = await fetch(`${API_BASE_URL}/users`, {
-    headers: req.headers, // forward headers if needed
+  const backendRes = await fetch(`${API_BASE_URL}/categories`, {
+    headers: req.headers,
   });
   const data = await backendRes.text();
   return new NextResponse(data, {
@@ -18,7 +17,6 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  // proxy create user
   const body = await req.text();
   const headers = Object.fromEntries(
     Array.from(req.headers) as [string, string][]
@@ -26,7 +24,7 @@ export async function POST(req: NextRequest) {
   delete headers.host;
   headers['Content-Type'] = 'application/json';
 
-  const backendRes = await fetch(`${API_BASE_URL}/users`, {
+  const backendRes = await fetch(`${API_BASE_URL}/categories`, {
     method: 'POST',
     headers,
     body,
@@ -40,5 +38,3 @@ export async function POST(req: NextRequest) {
     },
   });
 }
-
-// optionally other methods (PUT/PATCH/DELETE) could be added similarly

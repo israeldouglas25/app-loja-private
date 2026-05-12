@@ -14,7 +14,7 @@ export interface TableItem {
 export interface TableService<T extends TableItem> {
   getAll: () => Promise<T[] | { [key: string]: T[] }>;
   getById: (id: number) => Promise<T>;
-  update: (id: number, data: Partial<T>) => Promise<void>;
+  update?: (id: number, data: Partial<T>) => Promise<void>;
   delete: (id: number) => Promise<void>;
 }
 
@@ -127,7 +127,7 @@ export function GenericTable<T extends TableItem>({
     const updated = editing[id];
     if (!updated) return;
     try {
-      await service.update(id, updated);
+      await service.update?.(id, updated);
       await loadItems();
       cancelEdit(id);
       setResponse({
