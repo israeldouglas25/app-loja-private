@@ -2,6 +2,8 @@
 
 import { FC, useActionState, useState } from 'react';
 
+import Link from 'next/link';
+
 import { FormInput } from './FormInput';
 import { FormButton } from './FormButton';
 import { FormResponse } from './FormResponse';
@@ -54,10 +56,14 @@ export const FormProduct: FC<FormProductProps> = ({ action }) => {
           value={unitValue}
           setValue={setUnitValue}
         />
-
-        <FormButton className="bg-orange-500 text-white hover:bg-orange-600 font-bold">
-          Cadastrar
-        </FormButton>
+        <div className="flex gap-x-4 justify-center">
+          <FormButton className="flex-1 bg-orange-500 text-white hover:bg-orange-600 font-bold">
+            Cadastrar
+          </FormButton>
+          <FormButton className="flex-1 bg-blue-500 text-white hover:bg-blue-600 font-bold">
+            <Link href="/products/list"> Listar Produtos </Link>
+          </FormButton>
+        </div>
       </form>
     </>
   );

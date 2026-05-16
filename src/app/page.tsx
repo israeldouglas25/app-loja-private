@@ -14,24 +14,19 @@ export default function Home() {
       route: '/categories',
     },
     {
-      label: 'Adicionar produto',
+      label: 'Produto',
       icon: '/adicionar-produto.png',
       route: '/products',
     },
     {
-      label: 'Listar produtos',
-      icon: '/listar-produtos.png',
-      route: '/products/list',
-    },
-    {
-      label: 'Novo pedido',
+      label: 'Pedido',
       icon: '/adicionar-ao-carrinho.png',
       route: '/orders',
     },
     {
-      label: 'Listar usuários',
+      label: 'Usuário',
       icon: '/lista-de-usuarios.png',
-      route: '/users/list',
+      route: '/users',
     },
   ];
 
