@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 };
 
 export default function Users() {
-  const handlerUsers = async (_: string, formData: FormData) => {
+  const handlerUsers = async (__prevState: { message: string; color: string; redirect?: boolean } | null, formData: FormData) => {
     'use server';
 
     const username = formData.get('username')?.toString();
@@ -25,28 +25,27 @@ export default function Users() {
     try {
       const data = await usersService.create({
         name: username,
-        email: email,
-        password: password,
+        email,
+        password,
       });
-
       if (!data?.id) {
         return {
-          message: 'Erro ao cadastrar usuário',
+          message: 'Resposta inválida do servidor',
           color: 'bg-red-400',
         };
       }
-
       return {
         message: 'Usuário cadastrado com sucesso',
         color: 'bg-green-400',
         redirect: true,
       };
     } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Ocorreu um erro ao cadastrar o usuário';
       console.error('handlerUsers failed:', error);
-      return {
-        message: 'Ocorreu um erro ao cadastrar o usuário',
-        color: 'bg-red-400',
-      };
+      return { message, color: 'bg-red-400' };
     }
   };
 

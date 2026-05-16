@@ -62,7 +62,7 @@ export async function apiFetch<T = unknown>(
 ): Promise<T> {
   // Check if token has expired before making the request
   if (IS_BROWSER && isTokenExpired()) {
-    const error : ApiError = new Error(
+    const error: ApiError = new Error(
       'Sua sessão expirou. Por favor, faça login novamente.'
     );
     error.isTokenExpired = true;
@@ -118,13 +118,29 @@ export async function apiFetch<T = unknown>(
     throw error;
   }
 
-  // you may want to handle 401/403 globally here
-  if (res.status === 204) return { status: 204 } as T; // No Content
+  if (res.status === 204) return { status: 204 } as T;
+
   const text = await res.text();
-  if (!text) return { status: res.status } as T;
+  const parsed = text ? safeJsonParse(text) : null;
+
+  if (!res.ok) {
+    const message =
+      (parsed && typeof parsed === 'object' && 'message' in parsed
+        ? parsed.message
+        : null) || `Erro ${res.status}`;
+    const error: ApiError = new Error(message);
+    error.status = res.status;
+    throw error;
+  }
+
+  if (!parsed) return { status: res.status } as T;
+  return parsed as T;
+}
+
+function safeJsonParse(text: string) {
   try {
     return JSON.parse(text);
   } catch {
-    return { status: res.status, text } as T;
+    return { text };
   }
 }
