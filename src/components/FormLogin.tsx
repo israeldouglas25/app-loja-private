@@ -32,17 +32,17 @@ export const FormLogin: FC<FormLoginProps> = ({ action }) => {
 
   const [response, formAction] = useActionState(action, null);
 
-  // obtain router instance once inside component body
+  // Obtenha a instância do roteador assim que estiver dentro do corpo do componente.
   const router = useRouter();
 
   useEffect(() => {
     if (response?.user) {
       localStorage.setItem('user', JSON.stringify(response.user));
-      // notify other components (e.g. Header) that the stored user changed
+      // Notificar outros componentes (por exemplo, o Header) de que o usuário armazenado foi alterado.
       window.dispatchEvent(new Event('userChanged'));
     }
 
-    // Store the token in localStorage after successful login
+    // Armazene o token no localStorage após a conclusão bem-sucedida login
     if (response?.token) {
       localStorage.setItem('token', response.token);
       console.log(
@@ -51,7 +51,7 @@ export const FormLogin: FC<FormLoginProps> = ({ action }) => {
       );
     }
 
-    // Store the expiration timestamp
+    // Armazene o carimbo de data/hora de expiração.
     if (response?.expiresIn) {
       const expiresAt = Date.now() + response.expiresIn * 1000;
       localStorage.setItem('tokenExpires', expiresAt.toString());

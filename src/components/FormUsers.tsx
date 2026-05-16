@@ -3,12 +3,14 @@
 import { useRouter } from "next/navigation";
 import { FC, useActionState, useEffect, useState } from "react";
 
+import Link from "next/link";
+
 import { FormInput } from "./FormInput";
 import { FormButton } from "./FormButton";
 import { FormResponse } from "./FormResponse";
 
 type FormUserProps = {
-  action: (_: string, formData: FormData) => Promise<any>;
+  action: (state: { message: string; color: string; redirect?: boolean } | null, formData: FormData) => Promise<{ message: string; color: string; redirect?: boolean } | null>;
 };
 
 export const FormUsers: FC<FormUserProps> = ({ action }) => {
@@ -18,7 +20,7 @@ export const FormUsers: FC<FormUserProps> = ({ action }) => {
 
   const [response, formAction] = useActionState(action, null);
 
-  // obtain router instance once inside component body
+  // Obtenha a instância do roteador assim que estiver dentro do corpo do componente.
   const router = useRouter();
 
   useEffect(() => {
@@ -40,9 +42,14 @@ export const FormUsers: FC<FormUserProps> = ({ action }) => {
         <FormInput id="email" type="email" placeholder="Email" value={email} setValue={setEmail} />
         <FormInput id="password" type="password" placeholder="Senha" value={password} setValue={setPassword} />
 
-        <FormButton className="bg-orange-500 text-white hover:bg-orange-600 font-bold">
-          Cadastrar
-        </FormButton>
+        <div className="flex gap-x-4 justify-center">
+          <FormButton className="flex-1 bg-orange-500 text-white hover:bg-orange-600 font-bold">
+            Cadastrar
+          </FormButton>
+          <FormButton className="flex-1 bg-blue-500 text-white hover:bg-blue-600 font-bold">
+            <Link href="/users/list">Listar usuários</Link>
+          </FormButton>
+        </div>
       </form>
     </>
   );
