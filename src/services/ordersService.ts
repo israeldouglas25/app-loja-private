@@ -15,7 +15,7 @@ export type OrderItem = {
 export type OrderCreateDto = {
   paymentType: PaymentType;
   discount: number;
-  itens: OrderItem[];
+  items: OrderItem[];
 };
 
 export const ordersService = {

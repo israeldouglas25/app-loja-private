@@ -19,7 +19,7 @@ export function Modal({ children, onClose }: ModalProps) {
                 {/* close button in corner */}
                 <button
                     type="button"
-                    className="absolute top-0 right-2"
+                    className="absolute top-2 right-2"
                     onClick={onClose}
                 >
                     ❌
