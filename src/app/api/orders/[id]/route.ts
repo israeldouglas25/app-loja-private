@@ -1,11 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-interface RouteContext {
-  params: Promise<{
-    id: string;
-  }>;
-}
-
 const API_BASE_URL = process.env.BACKEND_URL || 'http://localhost:8080/api/v1';
 
 async function proxyToBackend(path: string, req: NextRequest, method = 'GET') {
@@ -45,26 +39,38 @@ async function proxyToBackend(path: string, req: NextRequest, method = 'GET') {
   });
 }
 
-export async function GET(req: NextRequest, context: RouteContext) {
+export async function GET(
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
   const params = await context.params;
   const { id } = params;
-  return proxyToBackend(`/users/${id}`, req, 'GET');
+  return proxyToBackend(`/orders/${id}`, req, 'GET');
 }
 
-export async function PUT(req: NextRequest, context: RouteContext) {
+export async function PUT(
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
   const params = await context.params;
   const { id } = params;
-  return proxyToBackend(`/users/${id}`, req, 'PUT');
+  return proxyToBackend(`/orders/${id}`, req, 'PUT');
 }
 
-export async function PATCH(req: NextRequest, context: RouteContext) {
+export async function PATCH(
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
   const params = await context.params;
   const { id } = params;
-  return proxyToBackend(`/users/${id}`, req, 'PATCH');
+  return proxyToBackend(`/orders/${id}`, req, 'PATCH');
 }
 
-export async function DELETE(req: NextRequest, context: RouteContext) {
+export async function DELETE(
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
   const params = await context.params;
   const { id } = params;
-  return proxyToBackend(`/users/${id}`, req, 'DELETE');
+  return proxyToBackend(`/orders/${id}`, req, 'DELETE');
 }

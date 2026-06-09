@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import Link from 'next/link';
 import { FormButton } from './FormButton';
 import { FormInput } from './FormInput';
 import { FormResponse } from './FormResponse';
@@ -208,7 +209,7 @@ export function FormOrder() {
         <button
           type="button"
           onClick={() => setIsProductModalOpen(true)}
-          className="flex-1 bg-blue-500 text-white hover:bg-blue-600 font-bold"
+          className="flex-1 bg-green-500 text-white hover:bg-green-600 font-bold"
         >
           Buscar produto
         </button>
@@ -286,7 +287,7 @@ export function FormOrder() {
                                     className={`flex-1 text-white font-bold px-3 py-1 rounded transition ${
                                       quantity > 0
                                         ? 'bg-red-500 hover:bg-red-600'
-                                        : 'bg-blue-500 hover:bg-blue-600'
+                                        : 'bg-green-500 hover:bg-green-600'
                                     }`}
                                   >
                                     {quantity > 0 ? 'Remover' : 'Adicionar'}
@@ -409,13 +410,18 @@ export function FormOrder() {
             <span>{formatCurrency(totalWithDiscount)}</span>
           </div>
         </div>
-        <FormButton
-          type="submit"
-          className="font-bold bg-orange-500 text-white px-3 py-2 rounded hover:bg-orange-600 transition disabled:opacity-50"
-          disabled={loading}
-        >
-          {loading ? 'Enviando pedido...' : 'Enviar pedido'}
-        </FormButton>
+        <div className="flex gap-x-4 justify-center">
+          <FormButton
+            type="submit"
+            className="flex-1 font-bold bg-orange-500 text-white px-3 py-2 rounded hover:bg-orange-600 transition disabled:opacity-50"
+            disabled={loading}
+          >
+            {loading ? 'Enviando pedido...' : 'Enviar pedido'}
+          </FormButton>
+          <FormButton className="flex-1 bg-blue-500 text-white hover:bg-blue-600 font-bold">
+            <Link href="/orders/list"> Listar Pedidos </Link>
+          </FormButton>
+        </div>
       </form>
     </div>
   );

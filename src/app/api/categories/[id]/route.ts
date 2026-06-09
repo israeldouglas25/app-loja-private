@@ -41,7 +41,7 @@ async function proxyToBackend(path: string, req: NextRequest, method = 'GET') {
 
 export async function GET(
   req: NextRequest,
-  context: { params: Record<string, string> }
+  context: { params: Promise<{ id: string }> }
 ) {
   const params = await context.params;
   const { id } = params;
@@ -50,7 +50,7 @@ export async function GET(
 
 export async function DELETE(
   req: NextRequest,
-  context: { params: Record<string, string> }
+  context: { params: Promise<{ id: string }> }
 ) {
   const params = await context.params;
   const { id } = params;

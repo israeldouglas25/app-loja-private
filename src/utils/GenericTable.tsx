@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { FormResponse } from '../components/FormResponse';
@@ -29,6 +29,7 @@ export interface GenericTableProps<T extends TableItem> {
   errorPrefix?: string;
   visibleFields?: string[];
   columnLabels?: Record<string, string>;
+  cellRenderers?: Record<string, (value: unknown, item: T) => ReactNode>;
 }
 
 interface ApiError {
@@ -52,6 +53,7 @@ export function GenericTable<T extends TableItem>({
   errorPrefix = 'Item',
   visibleFields,
   columnLabels = {},
+  cellRenderers,
 }: GenericTableProps<T>) {
   const router = useRouter();
   const [items, setItems] = useState<T[]>([]);
@@ -157,14 +159,32 @@ export function GenericTable<T extends TableItem>({
   const pageItems = items.slice(startIndex, startIndex + pageSize);
   const totalPages = Math.ceil(items.length / pageSize);
 
-  const allKeys = Array.from(new Set(items.flatMap((u) => Object.keys(u))));
-  const displayKeys = visibleFields
-    ? visibleFields.filter((k) => allKeys.includes(k))
-    : allKeys;
+  const allKeys = Array.from(
+    new Set([...items.flatMap((u) => Object.keys(u)), ...(visibleFields ?? [])])
+  );
+  const displayKeys = visibleFields ?? allKeys;
 
   const getColumnLabel = (fieldName: string) =>
     columnLabels[fieldName] ||
     fieldName.charAt(0).toUpperCase() + fieldName.slice(1);
+
+  const renderCellValue = (key: string, value: unknown, item: T) => {
+    if (cellRenderers?.[key]) {
+      return cellRenderers[key](value, item);
+    }
+
+    if (Array.isArray(value)) {
+      return (
+        <span>{value.length === 0 ? '—' : `${value.length} item(s)`}</span>
+      );
+    }
+
+    if (value !== null && typeof value === 'object') {
+      return <span>{JSON.stringify(value)}</span>;
+    }
+
+    return <span>{formatIfCurrency(key, value ?? '')}</span>;
+  };
 
   if (loading) return <p className="text-center py-4">{loadingMessage}</p>;
   if (items.length === 0)
@@ -220,7 +240,7 @@ export function GenericTable<T extends TableItem>({
                           }
                         />
                       ) : (
-                        <span>{formatIfCurrency(key, rowData[key] ?? '')}</span>
+                        renderCellValue(key, rowData[key], item)
                       )}
                     </td>
                   ))}
