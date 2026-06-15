@@ -25,10 +25,13 @@ export const FormCategory: FC<FormCategoryProps> = ({ action }) => {
       <FormResponse response={response} />
 
       <form action={formAction} className="grid mt-4 mb-4 gap-y-2">
+        <label htmlFor="name" className="font-semibold">
+          Nome da categoria
+        </label>
         <FormInput
           id="name"
           type="text"
-          placeholder="Nome"
+          placeholder="Categoria"
           value={name}
           setValue={setName}
         />
