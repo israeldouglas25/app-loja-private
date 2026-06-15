@@ -34,3 +34,12 @@ button:hover {
   box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
 }
 
+select {
+  display: block;
+  margin-bottom: 0.5rem;
+  padding: 0.5rem;
+  border: 1px solid oklch(90% 0.04 70);
+  box-shadow: 0 6px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+}
+
