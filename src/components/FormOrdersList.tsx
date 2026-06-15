@@ -92,7 +92,7 @@ export function FormOrdersList() {
         >
           {isExpanded
             ? 'Ocultar itens'
-            : `Ver ${items.length} item${items.length > 1 ? 's' : ''}`}
+            : `+ ${items.length} ${items.length > 1 ? 'itens' : 'item'}`}
         </button>
 
         {isExpanded && (
@@ -108,8 +108,8 @@ export function FormOrdersList() {
 
               return (
                 <li key={`${item.id}-${index}`}>
-                  <span className="font-medium">{productName}</span>
-                  <span className="ml-1">x{orderItem.quantity}</span>
+                  <span className="ml-1">{orderItem.quantity}</span>
+                  <span className="font-medium"> {productName}</span>                  
                   {typeof unitValue === 'number' && (
                     <span className="ml-2">{formatCurrency(unitValue)}</span>
                   )}
@@ -147,7 +147,7 @@ export function FormOrdersList() {
       ]}
       columnLabels={{
         id: 'ID',
-        dateOrder: 'Data e Hora',
+        dateOrder: 'Data',
         user: 'Usuário',
         items: 'Itens',
         subTotal: 'Subtotal',
