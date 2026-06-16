@@ -6,6 +6,7 @@ import { GenericTable } from "../utils/GenericTable";
 export type Product = {
   id: number;
   name: string;
+  code: number;
   stockQuantity: number;
   category: string;
   unitValue: number;
@@ -20,9 +21,10 @@ export function FormProductsList() {
       errorPrefix="Produto"
       loadingMessage="Carregando produtos..."
       emptyMessage="Nenhum produto encontrado ou você não tem permissão para visualizar os produtos."
-      visibleFields={["id", "name", "category", "stockQuantity", "unitValue"]}
+      visibleFields={["id", "code", "name", "category", "stockQuantity", "unitValue"]}
       columnLabels={{
         id: "ID",
+        code: "Código",
         name: "Nome",
         category: "Categoria",
         stockQuantity: "Estoque",

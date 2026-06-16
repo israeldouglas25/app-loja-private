@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useActionState, useState } from 'react';
+import { FC, useActionState, useEffect, useState } from 'react';
 
 import Link from 'next/link';
 
@@ -19,12 +19,34 @@ export const FormCategory: FC<FormCategoryProps> = ({ action }) => {
   const [name, setName] = useState('');
 
   const [response, formAction] = useActionState(action, null);
+  const [displayResponse, setDisplayResponse] = useState(response);
+
+  const resetForm = () => {
+    setName('');
+  };
+
+    useEffect(() => {
+      setDisplayResponse(response);
+    }, [response]);
+  
+    useEffect(() => {
+      if (!displayResponse?.message || displayResponse.color !== 'bg-green-400') {
+        return;
+      }
+  
+      const timer = window.setTimeout(() => {
+        resetForm();
+        setDisplayResponse(null);
+      }, 3000);
+  
+      return () => window.clearTimeout(timer);
+    }, [displayResponse]);
 
   return (
     <>
-      <FormResponse response={response} />
+      <FormResponse response={displayResponse} />
 
-      <form action={formAction} className="grid mt-4 mb-4 gap-y-2">
+      <form action={formAction} className="grid gap-y-2">
         <label htmlFor="name" className="font-semibold">
           Nome da categoria
         </label>

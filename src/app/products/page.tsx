@@ -18,17 +18,19 @@ export default function Products() {
     'use server';
 
     const name = formData.get('name')?.toString();
+    const code = formData.get('code')?.toString();
     const stockQuantity = formData.get('stockQuantity')?.toString();
     const categoryId = formData.get('categoryId')?.toString();
     const unitValue = formData.get('unitValue')?.toString();
 
-    if (!name || !stockQuantity || !categoryId || !unitValue) {
+    if (!name || !code || !stockQuantity || !categoryId || !unitValue) {
       return { message: 'Preencha todos os campos', color: 'bg-red-400' };
     }
 
     try {
       const data = await productsService.create({
         name: name,
+        code: parseInt(code || '0'),
         stockQuantity: parseInt(stockQuantity || '0'),
         categoryId: parseInt(categoryId || '0'),
         unitValue: parseFloat(unitValue || '0'),
@@ -50,7 +52,7 @@ export default function Products() {
     } catch (error) {
       console.error('handlerProducts failed:', error);
       return {
-        message: 'Permissão negada ou erro ao cadastrar o produto.',
+        message: error instanceof Error ? error.message : 'Erro desconhecido',
         color: 'bg-red-400',
       };
     }

@@ -2,7 +2,8 @@ import { apiFetch } from './apiClient';
 
 export interface Product {
   id: number;
-  name: string;
+  code: number;
+  name: string;  
   stockQuantity: number;
   categoryId: number;
   category: string;
@@ -10,6 +11,7 @@ export interface Product {
 }
 
 export type ProductCreateDto = {
+  code: number;
   name: string;
   stockQuantity: number;
   categoryId: number;

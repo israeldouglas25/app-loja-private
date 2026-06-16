@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { FormResponse } from '../components/FormResponse';
 import { formatIfCurrency } from './currencyFormatter';
+import { FormButton } from '@/components/FormButton';
 
 export interface TableItem {
   id: number;
@@ -192,7 +193,21 @@ export function GenericTable<T extends TableItem>({
 
   return (
     <div className="mt-6">
-      <h2 className="text-xl font-bold mb-4">{title}</h2>
+      <div className="mb-4 flex items-center justify-between gap-2">
+        <div className="shrink-0">
+          <FormButton
+            type="button"
+            className="bg-orange-500 text-white hover:bg-orange-600 font-bold whitespace-nowrap"
+            onClick={() => router.back()}
+          >
+            Voltar
+          </FormButton>
+        </div>
+        <h2 className="flex-1 text-center text-xl font-bold truncate">
+          {title}
+        </h2>
+        <div/>
+      </div>
       <FormResponse response={response} />
 
       <div className="overflow-x-auto rounded border">

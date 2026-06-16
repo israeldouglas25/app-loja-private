@@ -19,6 +19,7 @@ type FormProductProps = {
 export const FormProduct: FC<FormProductProps> = ({ action }) => {
   const [name, setName] = useState('');
   const [stockQuantity, setStockQuantity] = useState('');
+  const [code, setCode] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [unitValue, setUnitValue] = useState('');
   const [categories, setCategories] = useState<Category[]>([]);
@@ -74,6 +75,7 @@ export const FormProduct: FC<FormProductProps> = ({ action }) => {
   const resetForm = () => {
     setName('');
     setStockQuantity('');
+    setCode('');
     setCategoryId('');
     setUnitValue('');
   };
@@ -118,8 +120,20 @@ export const FormProduct: FC<FormProductProps> = ({ action }) => {
       <form
         action={formAction}
         onSubmit={handleSubmit}
-        className="grid mt-4 mb-4 gap-y-2"
+        className="grid gap-y-2"
       >
+        <div className="grid gap-y-2">
+          <label htmlFor="code" className="font-semibold">
+            Código
+          </label>
+          <FormInput
+            id="code"
+            type="number"
+            placeholder="Código único"
+            value={code}
+            setValue={setCode}
+          />
+        </div>
         <div className="grid gap-y-2">
           <label htmlFor="name" className="font-semibold">
             Nome do produto
@@ -143,7 +157,7 @@ export const FormProduct: FC<FormProductProps> = ({ action }) => {
             value={stockQuantity}
             setValue={setStockQuantity}
           />
-        </div>
+        </div>        
         <div className="grid gap-y-2">
           <label htmlFor="categoryId" className="font-semibold">
             Categoria
