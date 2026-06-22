@@ -1,5 +1,45 @@
 import { apiFetch } from './apiClient';
 
+export type OrderQueryParams = {
+  startDate?: string;
+  endDate?: string;
+  page?: number;
+  size?: number;
+};
+
+export type PaginatedResponse<T> = {
+  content: T[];
+  totalPages: number;
+  totalElements: number;
+  number: number;
+  size: number;
+  first: boolean;
+  last: boolean;
+};
+
+const buildQueryString = (params?: OrderQueryParams) => {
+  const searchParams = new URLSearchParams();
+
+  if (params?.startDate) {
+    searchParams.set('startDate', params.startDate);
+  }
+
+  if (params?.endDate) {
+    searchParams.set('endDate', params.endDate);
+  }
+
+  if (typeof params?.page === 'number') {
+    searchParams.set('page', String(params.page));
+  }
+
+  if (typeof params?.size === 'number') {
+    searchParams.set('size', String(params.size));
+  }
+
+  const queryString = searchParams.toString();
+  return queryString ? `?${queryString}` : '';
+};
+
 export enum PaymentType {
   DINHEIRO = 'DINHEIRO',
   DEBITO = 'DEBITO',
@@ -40,7 +80,10 @@ export interface Order {
 
 export const ordersService = {
   // GET - Listar todos
-  getAll: async () => apiFetch<Order[]>('/orders', { method: 'GET' }),
+  getAll: async (params?: OrderQueryParams) =>
+    apiFetch<PaginatedResponse<Order>>(`/orders${buildQueryString(params)}`, {
+      method: 'GET',
+    }),
 
   // GET - Buscar por ID
   getById: async (id: number) =>
@@ -68,7 +111,7 @@ export const ordersService = {
       body: JSON.stringify(data),
     });
   },
-  
+
   // DELETE - Deletar
   delete: async (id: number) => {
     await apiFetch(`/orders/${id}`, { method: 'DELETE' });

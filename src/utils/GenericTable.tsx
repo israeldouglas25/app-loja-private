@@ -5,7 +5,6 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { FormResponse } from '../components/FormResponse';
 import { formatIfCurrency } from './currencyFormatter';
-import { FormButton } from '@/components/FormButton';
 
 export interface TableItem {
   id: number;
@@ -13,15 +12,29 @@ export interface TableItem {
 }
 
 export interface TableService<T extends TableItem> {
-  getAll: () => Promise<T[] | { [key: string]: T[] }>;
+  getAll: (params?: {
+    page?: number;
+    size?: number;
+    [key: string]: unknown;
+  }) => Promise<T[] | { [key: string]: T[] } | PaginatedResponse<T>>;
   getById: (id: number) => Promise<T>;
   update?: (id: number, data: Partial<T>) => Promise<void>;
   delete: (id: number) => Promise<void>;
 }
 
+interface PaginatedResponse<T> {
+  content?: T[];
+  totalPages?: number;
+  totalElements?: number;
+  number?: number;
+  size?: number;
+  first?: boolean;
+  last?: boolean;
+}
+
 export interface GenericTableProps<T extends TableItem> {
   service: TableService<T>;
-  title: string;
+  title?: string;
   pageSize?: number;
   dataField?: string;
   disabledFields?: string[];
@@ -31,6 +44,8 @@ export interface GenericTableProps<T extends TableItem> {
   visibleFields?: string[];
   columnLabels?: Record<string, string>;
   cellRenderers?: Record<string, (value: unknown, item: T) => ReactNode>;
+  reloadKey?: number;
+  useServerPagination?: boolean;
 }
 
 interface ApiError {
@@ -45,7 +60,6 @@ function isApiError(err: unknown): err is ApiError {
 
 export function GenericTable<T extends TableItem>({
   service,
-  title,
   pageSize = 10,
   dataField,
   disabledFields = ['id'],
@@ -55,6 +69,8 @@ export function GenericTable<T extends TableItem>({
   visibleFields,
   columnLabels = {},
   cellRenderers,
+  reloadKey = 0,
+  useServerPagination = false,
 }: GenericTableProps<T>) {
   const router = useRouter();
   const [items, setItems] = useState<T[]>([]);
@@ -64,6 +80,7 @@ export function GenericTable<T extends TableItem>({
     color: string;
   } | null>(null);
   const [page, setPage] = useState(1);
+  const [serverTotalPages, setServerTotalPages] = useState(1);
   const [editing, setEditing] = useState<{ [id: number]: T }>({});
 
   useEffect(() => {
@@ -99,22 +116,51 @@ export function GenericTable<T extends TableItem>({
   );
 
   const loadItems = useCallback(async () => {
+    setLoading(true);
     try {
-      const data = await service.getAll();
-      const items = dataField
-        ? (data as Record<string, T[]>)[dataField]
-        : (data as T[]);
-      setItems(Array.isArray(items) ? items : []);
+      const data = await service.getAll(
+        useServerPagination
+          ? {
+              page: page - 1,
+              size: pageSize,
+            }
+          : undefined
+      );
+
+      const paginated = data as PaginatedResponse<T>;
+      const hasPaginatedContent =
+        paginated &&
+        Array.isArray(paginated.content) &&
+        (typeof paginated.totalPages === 'number' ||
+          typeof paginated.totalElements === 'number');
+
+      if (useServerPagination && hasPaginatedContent) {
+        setItems(Array.isArray(paginated.content) ? paginated.content : []);
+        setServerTotalPages(
+          typeof paginated.totalPages === 'number' && paginated.totalPages > 0
+            ? paginated.totalPages
+            : 1
+        );
+
+        if (typeof paginated.number === 'number' && paginated.number >= 0) {
+          setPage(paginated.number + 1);
+        }
+      } else {
+        const items = dataField
+          ? (data as Record<string, T[]>)[dataField]
+          : (data as T[]);
+        setItems(Array.isArray(items) ? items : []);
+      }
     } catch (err) {
       handleError(err, 'ao carregar lista');
     } finally {
       setLoading(false);
     }
-  }, [service, dataField, handleError]);
+  }, [service, dataField, handleError, page, pageSize, useServerPagination]);
 
   useEffect(() => {
     loadItems();
-  }, [loadItems]);
+  }, [loadItems, reloadKey]);
 
   const startEdit = (item: T) =>
     setEditing((e) => ({ ...e, [item.id]: { ...item } }));
@@ -156,9 +202,20 @@ export function GenericTable<T extends TableItem>({
     }
   };
 
+  const totalPages = useServerPagination
+    ? serverTotalPages
+    : Math.max(1, Math.ceil(items.length / pageSize));
+
+  useEffect(() => {
+    if (page > totalPages) {
+      setPage(1);
+    }
+  }, [page, totalPages]);
+
   const startIndex = (page - 1) * pageSize;
-  const pageItems = items.slice(startIndex, startIndex + pageSize);
-  const totalPages = Math.ceil(items.length / pageSize);
+  const pageItems = useServerPagination
+    ? items
+    : items.slice(startIndex, startIndex + pageSize);
 
   const allKeys = Array.from(
     new Set([...items.flatMap((u) => Object.keys(u)), ...(visibleFields ?? [])])
@@ -193,21 +250,6 @@ export function GenericTable<T extends TableItem>({
 
   return (
     <div className="mt-6">
-      <div className="mb-4 flex items-center justify-between gap-2">
-        <div className="shrink-0">
-          <FormButton
-            type="button"
-            className="bg-orange-500 text-white hover:bg-orange-600 font-bold whitespace-nowrap"
-            onClick={() => router.back()}
-          >
-            Voltar
-          </FormButton>
-        </div>
-        <h2 className="flex-1 text-center text-xl font-bold truncate">
-          {title}
-        </h2>
-        <div/>
-      </div>
       <FormResponse response={response} />
 
       <div className="overflow-x-auto rounded border">

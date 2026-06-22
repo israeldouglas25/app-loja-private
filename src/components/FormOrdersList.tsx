@@ -1,9 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { OrderItem, ordersService, UserType } from '../services/ordersService';
 import { GenericTable } from '../utils/GenericTable';
 import { formatCurrency } from '../utils/currencyFormatter';
+import { ButtonReturn } from './ButtonReturn';
+import { FormSearchDate } from './FormSearchDate';
 
 export type Order = {
   id: number;
@@ -17,9 +19,12 @@ export type Order = {
 };
 
 export function FormOrdersList() {
+  const today = new Date().toISOString().slice(0, 10);
   const [expandedItems, setExpandedItems] = useState<Record<number, boolean>>(
     {}
   );
+  const [appliedStartDate, setAppliedStartDate] = useState(today);
+  const [appliedEndDate, setAppliedEndDate] = useState(today);
 
   const toggleItems = (orderId: number) => {
     setExpandedItems((current) => ({
@@ -27,6 +32,20 @@ export function FormOrdersList() {
       [orderId]: !current[orderId],
     }));
   };
+
+  const service = useMemo(
+    () => ({
+      ...ordersService,
+      getAll: (params?: { page?: number; size?: number }) =>
+        ordersService.getAll({
+          startDate: appliedStartDate,
+          endDate: appliedEndDate,
+          page: params?.page,
+          size: params?.size,
+        }),
+    }),
+    [appliedStartDate, appliedEndDate]
+  );
 
   const renderDiscountCell = (value: unknown) => {
     const numericValue = Number(value ?? 0);
@@ -44,8 +63,7 @@ export function FormOrdersList() {
       return <span>—</span>;
     }
 
-    const dateValue =
-      value instanceof Date ? value : new Date(String(value));
+    const dateValue = value instanceof Date ? value : new Date(String(value));
 
     if (Number.isNaN(dateValue.getTime())) {
       return <span>{String(value)}</span>;
@@ -109,7 +127,7 @@ export function FormOrdersList() {
               return (
                 <li key={`${item.id}-${index}`}>
                   <span className="ml-1">{orderItem.quantity}</span>
-                  <span className="font-medium"> {productName}</span>                  
+                  <span className="font-medium"> {productName}</span>
                   {typeof unitValue === 'number' && (
                     <span className="ml-2">{formatCurrency(unitValue)}</span>
                   )}
@@ -128,39 +146,47 @@ export function FormOrdersList() {
   };
 
   return (
-    <GenericTable<Order>
-      service={ordersService}
-      title="Lista de Pedidos"
-      pageSize={10}
-      errorPrefix="Pedido"
-      loadingMessage="Carregando pedidos..."
-      emptyMessage="Nenhum pedido encontrado ou você não tem permissão para visualizar os pedidos."
-      visibleFields={[
-        'id',
-        'dateOrder',
-        'user',
-        'items',
-        'subTotal',
-        'discount',
-        'total',
-        'payment',
-      ]}
-      columnLabels={{
-        id: 'ID',
-        dateOrder: 'Data',
-        user: 'Usuário',
-        items: 'Itens',
-        subTotal: 'Subtotal',
-        discount: 'Desconto',
-        total: 'Total',
-        payment: 'Tipo de Pagamento',
-      }}
-      cellRenderers={{
-        user: renderUserCell,
-        items: renderItemsCell,
-        discount: renderDiscountCell,
-        dateOrder: renderDateTimeCell,
-      }}
-    />
+    <div>
+      <ButtonReturn/> 
+      <FormSearchDate onSearch={(startDate, endDate) => {
+        setAppliedStartDate(startDate);
+        setAppliedEndDate(endDate);
+      }} />
+
+      <GenericTable<Order>
+        service={service}
+        pageSize={10}
+        useServerPagination
+        errorPrefix="Pedido"
+        loadingMessage="Carregando pedidos..."
+        emptyMessage="Nenhum pedido encontrado ou você não tem permissão para visualizar os pedidos."
+        visibleFields={[
+          'id',
+          'dateOrder',
+          'user',
+          'items',
+          'subTotal',
+          'discount',
+          'total',
+          'payment',
+        ]}
+        columnLabels={{
+          id: 'ID',
+          dateOrder: 'Data',
+          user: 'Usuário',
+          items: 'Itens',
+          subTotal: 'Subtotal',
+          discount: 'Desconto',
+          total: 'Total',
+          payment: 'Tipo de Pagamento',
+        }}
+        cellRenderers={{
+          user: renderUserCell,
+          items: renderItemsCell,
+          discount: renderDiscountCell,
+          dateOrder: renderDateTimeCell,
+        }}
+      />
+    </div>
   );
 }

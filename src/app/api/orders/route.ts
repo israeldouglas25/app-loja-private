@@ -3,7 +3,10 @@ import { NextRequest, NextResponse } from 'next/server';
 const API_BASE_URL = process.env.BACKEND_URL || 'http://localhost:8080/api/v1';
 
 export async function GET(req: NextRequest) {
-  const backendRes = await fetch(`${API_BASE_URL}/orders`, {
+  const backendUrl = new URL(`${API_BASE_URL}/orders`);
+  backendUrl.search = req.nextUrl.search;
+
+  const backendRes = await fetch(backendUrl.toString(), {
     headers: req.headers,
   });
   const data = await backendRes.text();
