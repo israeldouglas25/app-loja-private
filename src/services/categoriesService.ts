@@ -33,6 +33,22 @@ export const categoriesService = {
       body: JSON.stringify(data),
     }),
 
+  // PUT - Atualizar completamente (também aceita dados parciais para compatibilidade com GenericTable)
+  update: async (id: number, data: Partial<Category>) => {
+    await apiFetch(`/categories/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  },
+
+  // PATCH - Atualizar parcialmente
+  partialUpdate: async (id: number, data: Partial<Category>) => {
+    await apiFetch(`/categories/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  },
+
   // DELETE - Deletar
   delete: async (id: number) => {
     await apiFetch(`/categories/${id}`, { method: 'DELETE' });

@@ -48,6 +48,24 @@ export async function GET(
   return proxyToBackend(`/categories/${id}`, req, 'GET');
 }
 
+export async function PUT(
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  const params = await context.params;
+  const { id } = params;
+  return proxyToBackend(`/categories/${id}`, req, 'PUT');
+}
+
+export async function PATCH(
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  const params = await context.params;
+  const { id } = params;
+  return proxyToBackend(`/categories/${id}`, req, 'PATCH');
+}
+
 export async function DELETE(
   req: NextRequest,
   context: { params: Promise<{ id: string }> }
