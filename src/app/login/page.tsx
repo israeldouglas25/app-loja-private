@@ -56,8 +56,8 @@ export default function login() {
         expiresIn: data.expiresIn, // Include expiresIn for client to calculate expiration
       };
     } catch (error) {
-      console.error('handlerLogin failed:', error);
-      return { message: 'Ocorreu um erro ao fazer login', color: 'bg-red-400' };
+      const err = error as Error;
+      return { message: err.message, color: 'bg-red-400' };
     }
   };
 
