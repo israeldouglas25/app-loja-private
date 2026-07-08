@@ -25,6 +25,7 @@ export function FormOrdersList() {
   );
   const [appliedStartDate, setAppliedStartDate] = useState(today);
   const [appliedEndDate, setAppliedEndDate] = useState(today);
+  const [appliedPaymentType, setAppliedPaymentType] = useState<string | undefined>(undefined);
   const [sumTotalOrders, setSumTotalOrders] = useState<number | null>(null);
 
   const toggleItems = (orderId: number) => {
@@ -41,6 +42,7 @@ export function FormOrdersList() {
         const response = await ordersService.getAll({
           startDate: appliedStartDate,
           endDate: appliedEndDate,
+          paymentType: appliedPaymentType,
           page: params?.page,
           size: params?.size,
         });
@@ -49,7 +51,7 @@ export function FormOrdersList() {
         return response.orders;
       },
     }),
-    [appliedStartDate, appliedEndDate]
+    [appliedStartDate, appliedEndDate, appliedPaymentType]
   );
 
   const renderDiscountCell = (value: unknown) => {
@@ -155,9 +157,10 @@ export function FormOrdersList() {
       <ButtonReturn />
       <div className="mt-4 flex flex-col sm:flex-row sm:items-stretch gap-4">
         <FormSearchDate
-          onSearch={(startDate, endDate) => {
+          onSearch={(startDate, endDate, paymentType) => {
             setAppliedStartDate(startDate);
             setAppliedEndDate(endDate);
+            setAppliedPaymentType(paymentType);
           }}
         />
 
