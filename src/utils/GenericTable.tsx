@@ -127,7 +127,10 @@ export function GenericTable<T extends TableItem>({
           : undefined
       );
 
-      const paginated = data as PaginatedResponse<T>;
+      const rootData = dataField
+        ? (data as Record<string, unknown>)[dataField]
+        : data;
+      const paginated = rootData as PaginatedResponse<T>;
       const hasPaginatedContent =
         paginated &&
         Array.isArray(paginated.content) &&
@@ -146,9 +149,11 @@ export function GenericTable<T extends TableItem>({
           setPage(paginated.number + 1);
         }
       } else {
-        const items = dataField
-          ? (data as Record<string, T[]>)[dataField]
-          : (data as T[]);
+        const items = Array.isArray(rootData)
+          ? (rootData as T[])
+          : dataField
+            ? (data as Record<string, T[]>)[dataField]
+            : (data as T[]);
         setItems(Array.isArray(items) ? items : []);
       }
     } catch (err) {

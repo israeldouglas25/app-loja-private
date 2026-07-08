@@ -17,6 +17,11 @@ export type PaginatedResponse<T> = {
   last: boolean;
 };
 
+export type OrdersListResponse = {
+  orders: PaginatedResponse<Order>;
+  sumTotalOrders?: number;
+};
+
 const buildQueryString = (params?: OrderQueryParams) => {
   const searchParams = new URLSearchParams();
 
@@ -81,7 +86,7 @@ export interface Order {
 export const ordersService = {
   // GET - Listar todos
   getAll: async (params?: OrderQueryParams) =>
-    apiFetch<PaginatedResponse<Order>>(`/orders${buildQueryString(params)}`, {
+    apiFetch<OrdersListResponse>(`/orders${buildQueryString(params)}`, {
       method: 'GET',
     }),
 

@@ -18,7 +18,7 @@ export function FormSearchDate({
   return (
     <form
         onSubmit={handleSubmit}
-        className="mb-4 flex flex-wrap items-end gap-3 rounded border bg-gray-50 p-3"
+        className="flex flex-wrap items-end gap-3 rounded border bg-gray-50 p-3"
         >                       
         <div >
           <label htmlFor="startDate" className="mb-1 block text-sm font-medium">

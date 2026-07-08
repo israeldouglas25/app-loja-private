@@ -25,6 +25,7 @@ export function FormOrdersList() {
   );
   const [appliedStartDate, setAppliedStartDate] = useState(today);
   const [appliedEndDate, setAppliedEndDate] = useState(today);
+  const [sumTotalOrders, setSumTotalOrders] = useState<number | null>(null);
 
   const toggleItems = (orderId: number) => {
     setExpandedItems((current) => ({
@@ -36,13 +37,17 @@ export function FormOrdersList() {
   const service = useMemo(
     () => ({
       ...ordersService,
-      getAll: (params?: { page?: number; size?: number }) =>
-        ordersService.getAll({
+      getAll: async (params?: { page?: number; size?: number }) => {
+        const response = await ordersService.getAll({
           startDate: appliedStartDate,
           endDate: appliedEndDate,
           page: params?.page,
           size: params?.size,
-        }),
+        });
+
+        setSumTotalOrders(response.sumTotalOrders ?? null);
+        return response.orders;
+      },
     }),
     [appliedStartDate, appliedEndDate]
   );
@@ -147,11 +152,21 @@ export function FormOrdersList() {
 
   return (
     <div>
-      <ButtonReturn/> 
-      <FormSearchDate onSearch={(startDate, endDate) => {
-        setAppliedStartDate(startDate);
-        setAppliedEndDate(endDate);
-      }} />
+      <ButtonReturn />
+      <div className="mt-4 flex flex-col sm:flex-row sm:items-stretch gap-4">
+        <FormSearchDate
+          onSearch={(startDate, endDate) => {
+            setAppliedStartDate(startDate);
+            setAppliedEndDate(endDate);
+          }}
+        />
+
+        {sumTotalOrders !== null && (
+          <div className="sm:ml-auto self-stretch flex items-center rounded border border-orange-300 bg-orange-50 p-3 text-orange-900">
+            <strong className="mr-2">Total:</strong> {formatCurrency(sumTotalOrders)}
+          </div>
+        )}
+      </div>
 
       <GenericTable<Order>
         service={service}
