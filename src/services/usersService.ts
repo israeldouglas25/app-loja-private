@@ -32,14 +32,6 @@ export const usersService = {
     });
   },
 
-  // PATCH - Atualizar parcialmente
-  partialUpdate: async (id: number, data: Partial<User>) => {
-    await apiFetch(`/users/${id}`, {
-      method: 'PATCH',
-      body: JSON.stringify(data),
-    });
-  },
-
   // DELETE - Deletar
   delete: async (id: number) => {
     await apiFetch(`/users/${id}`, { method: 'DELETE' });

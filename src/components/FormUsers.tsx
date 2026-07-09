@@ -20,6 +20,7 @@ export const FormUsers: FC<FormUserProps> = ({ action }) => {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const [response, formAction] = useActionState(action, null);
 
@@ -63,13 +64,24 @@ export const FormUsers: FC<FormUserProps> = ({ action }) => {
         <label htmlFor="password" className="font-semibold">
           Senha
         </label>
-        <FormInput
-          id="password"
-          type="password"
-          placeholder="********"
-          value={password}
-          setValue={setPassword}
-        />
+        <div className="relative">
+          <FormInput
+            id="password"
+            type={showPassword ? 'text' : 'password'}
+            placeholder="********"
+            value={password}
+            setValue={setPassword}
+            className="w-full pr-10"
+          />
+          <button
+            type="button"
+            className="absolute inset-y-3 right-0 flex items-center px-3 text-gray-500 hover:text-gray-900"
+            onClick={() => setShowPassword((prev) => !prev)}
+            aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+          >
+            {showPassword ? '🙈' : '👁️'}
+          </button>
+        </div>
 
         <div className="flex gap-x-4 justify-center">
           <FormButton className="flex-1 bg-orange-500 text-white hover:bg-orange-600 font-bold">

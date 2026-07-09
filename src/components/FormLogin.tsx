@@ -29,6 +29,7 @@ type FormLoginProps = {
 export const FormLogin: FC<FormLoginProps> = ({ action }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const [response, formAction] = useActionState(action, null);
 
@@ -77,7 +78,7 @@ export const FormLogin: FC<FormLoginProps> = ({ action }) => {
     <>
       <FormResponse response={response} />
 
-      <form action={formAction} className="grid mt-4 mb-2 gap-y-2">
+      <form action={formAction} className="grid mt-2 mb-2 gap-y-2">
         <FormInput
           id="email"
           type="email"
@@ -85,13 +86,24 @@ export const FormLogin: FC<FormLoginProps> = ({ action }) => {
           value={email}
           setValue={setEmail}
         />
-        <FormInput
-          id="password"
-          type="password"
-          placeholder="Senha"
-          value={password}
-          setValue={setPassword}
-        />
+        <div className="relative">
+          <FormInput
+            id="password"
+            type={showPassword ? 'text' : 'password'}
+            placeholder="Senha"
+            value={password}
+            setValue={setPassword}
+            className="w-full pr-10"
+          />
+          <button
+            type="button"
+            className="absolute inset-y-3 right-0 flex items-center px-3 text-gray-500 hover:text-gray-900"
+            onClick={() => setShowPassword((prev) => !prev)}
+            aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+          >
+            {showPassword ? '🙈' : '👁️'}
+          </button>
+        </div>
 
         <FormButton className="bg-orange-500 text-white hover:bg-orange-600 font-bold">
           Login
