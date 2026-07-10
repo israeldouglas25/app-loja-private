@@ -40,7 +40,7 @@ export const FormUsers: FC<FormUserProps> = ({ action }) => {
     <>
       <FormResponse response={response} />
 
-      <form action={formAction} className="grid mt-4 mb-4 gap-y-2">
+      <form action={formAction} className="grid gap-y-2">
         <label htmlFor="username" className="font-semibold">
           Nome de usuário
         </label>
