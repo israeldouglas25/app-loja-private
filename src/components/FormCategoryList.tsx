@@ -19,7 +19,7 @@ export function FormCategoriesTable() {
         pageSize={10}
         errorPrefix="Categoria"
         loadingMessage="Carregando categorias..."
-        emptyMessage="Nenhuma categoria encontrada ou você não tem permissão para visualizar as categorias."
+        emptyMessage="Nenhuma categoria encontrada."
         visibleFields={["id", "name"]}
         columnLabels={{
           id: "ID",

@@ -177,7 +177,7 @@ export function FormOrdersList() {
         useServerPagination
         errorPrefix="Pedido"
         loadingMessage="Carregando pedidos..."
-        emptyMessage="Nenhum pedido encontrado ou você não tem permissão para visualizar os pedidos."
+        emptyMessage="Nenhum pedido encontrado."
         visibleFields={[
           'id',
           'dateOrder',

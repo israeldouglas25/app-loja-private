@@ -20,7 +20,7 @@ export function FormUsersList() {
         pageSize={5}
         errorPrefix="Usuário"
         loadingMessage="Carregando usuários..."
-        emptyMessage="Você não tem permissão para visualizar usuários ou não há usuários para exibir."
+        emptyMessage="Nenhum usuário encontrado."
       />
     </div>
   );
