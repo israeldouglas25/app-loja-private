@@ -109,7 +109,18 @@ export function GenericTable<T extends TableItem>({
           });
           return;
         }
+
+        if (err.message) {
+          setResponse({ message: err.message, color: 'bg-red-400' });
+          return;
+        }
       }
+
+      if (err instanceof Error && err.message) {
+        setResponse({ message: err.message, color: 'bg-red-400' });
+        return;
+      }
+
       setResponse({ message: `Erro: ${context}`, color: 'bg-red-400' });
     },
     [router]

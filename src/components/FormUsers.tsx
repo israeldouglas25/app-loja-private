@@ -42,7 +42,7 @@ export const FormUsers: FC<FormUserProps> = ({ action }) => {
 
       <form action={formAction} className="grid gap-y-2">
         <label htmlFor="username" className="font-semibold">
-          Nome de usuário
+          Nome
         </label>
         <FormInput
           id="username"
