@@ -11,14 +11,18 @@ export const metadata: Metadata = {
 };
 
 export default function Users() {
-  const handlerUsers = async (__prevState: { message: string; color: string; redirect?: boolean } | null, formData: FormData) => {
+  const handlerUsers = async (
+    __prevState: { message: string; color: string; redirect?: boolean } | null,
+    formData: FormData
+  ) => {
     'use server';
 
     const username = formData.get('username')?.toString();
     const email = formData.get('email')?.toString();
     const password = formData.get('password')?.toString();
+    const role = formData.get('role')?.toString();
 
-    if (!username || !email || !password) {
+    if (!username || !email || !password || !role) {
       return { message: 'Preencha todos os campos', color: 'bg-red-400' };
     }
 
@@ -27,6 +31,7 @@ export default function Users() {
         name: username,
         email,
         password,
+        role: role === 'ROLE_ADMIN' ? 'ROLE_ADMIN' : 'ROLE_USER',
       });
       if (!data?.id) {
         return {

@@ -1,16 +1,20 @@
 import { apiFetch } from './apiClient';
 
+export type Role = 'ROLE_ADMIN' | 'ROLE_USER';
+
 export interface User {
   id: number;
   name: string;
   email: string;
   password: string;
+  role?: Role;
 }
 
 export type UserCreateDto = {
   name: string;
   email: string;
   password: string;
+  role?: Role;
 };
 
 export const usersService = {

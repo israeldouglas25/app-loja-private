@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { FormInput } from './FormInput';
 import { FormButton } from './FormButton';
 import { FormResponse } from './FormResponse';
+import { type Role } from '@/services/usersService';
 
 type FormUserProps = {
   action: (
@@ -21,6 +22,7 @@ export const FormUsers: FC<FormUserProps> = ({ action }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [userRole, setUserRole] = useState<Role>('ROLE_USER');
 
   const [response, formAction] = useActionState(action, null);
 
@@ -82,6 +84,28 @@ export const FormUsers: FC<FormUserProps> = ({ action }) => {
             {showPassword ? '🙈' : '👁️'}
           </button>
         </div>
+        <span className="text-sm text-gray-600">
+          Senha deve conter pelo menos 8 caracteres:
+        <ul className="list-disc pl-5 text-sm text-gray-600">
+          <li>letra maiúscula</li>
+          <li>letra minúscula</li>
+          <li>número</li>
+        </ul>
+        </span>
+        <label htmlFor="role" className="font-semibold">
+          Tipo de usuário
+        </label>
+        <select
+          id="role"
+          name="role"
+          value={userRole}
+          onChange={(e) => setUserRole(e.target.value as Role)}
+          className="rounded border px-3 py-2"
+          required
+        >
+          <option value="ROLE_USER">Usuario</option>
+          <option value="ROLE_ADMIN">Administrador</option>
+        </select>
 
         <div className="flex gap-x-4 justify-center">
           <FormButton className="flex-1 bg-orange-500 text-white hover:bg-orange-600 font-bold">
