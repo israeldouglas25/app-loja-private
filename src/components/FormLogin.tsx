@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { FormInput } from './FormInput';
 import { FormButton } from './FormButton';
 import { FormResponse } from './FormResponse';
+import { getRolesFromToken } from '@/services/loginService';
 
 type User = {
   id?: string | number;
@@ -37,13 +38,19 @@ export const FormLogin: FC<FormLoginProps> = ({ action }) => {
   const router = useRouter();
 
   useEffect(() => {
-    if (response?.user) {
-      localStorage.setItem('user', JSON.stringify(response.user));
-      // Notificar outros componentes (por exemplo, o Header) de que o usuário armazenado foi alterado.
-      window.dispatchEvent(new Event('userChanged'));
+    if (!response) return;
+
+    const nextUser = response.user
+      ? {
+          ...response.user,
+          roles: response.token ? getRolesFromToken(response.token) : undefined,
+        }
+      : undefined;
+
+    if (nextUser) {
+      localStorage.setItem('user', JSON.stringify(nextUser));
     }
 
-    // Armazene o token no localStorage após a conclusão bem-sucedida login
     if (response?.token) {
       localStorage.setItem('token', response.token);
       console.log(
@@ -52,11 +59,14 @@ export const FormLogin: FC<FormLoginProps> = ({ action }) => {
       );
     }
 
-    // Armazene o carimbo de data/hora de expiração.
     if (response?.expiresIn) {
       const expiresAt = Date.now() + response.expiresIn * 1000;
       localStorage.setItem('tokenExpires', expiresAt.toString());
       console.log('Token expires at:', new Date(expiresAt).toISOString());
+    }
+
+    if (response?.token || response?.user) {
+      window.dispatchEvent(new Event('userChanged'));
     }
 
     if (response?.redirect) {
@@ -65,14 +75,7 @@ export const FormLogin: FC<FormLoginProps> = ({ action }) => {
       }, 3000);
       return () => clearTimeout(timer);
     }
-  }, [
-    response?.redirect,
-    router,
-    response?.user,
-    response?.token,
-    response?.expiresIn,
-    response,
-  ]);
+  }, [response, router]);
 
   return (
     <>

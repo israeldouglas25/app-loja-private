@@ -1,75 +1,87 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
 
-import { FormButton } from "./FormButton";
-import { loginService } from "@/services/loginService";
+import { FormButton } from './FormButton';
+import { loginService } from '@/services/loginService';
 
 export function Header() {
-    const [userName, setUserName] = useState<string | null>(null);
+  const [userName, setUserName] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-    useEffect(() => {
-        const loadUser = () => {
-            try {
-                const item = localStorage.getItem("user");
-                if (item) {
-                    const u = JSON.parse(item);
-                    setUserName(u?.name);
-                } else {
-                    setUserName(null);
-                }
-            } catch (e) {
-                console.error("failed to read user from localStorage", e);
-            }
-        };
+  useEffect(() => {
+    const loadUser = () => {
+      try {
+        const storedUser = loginService.getStoredUser();
+        const hasToken =
+          Boolean(localStorage.getItem('token')) &&
+          !loginService.isTokenExpired();
 
-        loadUser();
-        window.addEventListener("userChanged", loadUser);
-        return () => {
-            window.removeEventListener("userChanged", loadUser);
-        };
-    }, []);
+        if (storedUser?.name) {
+          setUserName(storedUser.name);
+        } else {
+          setUserName('Usuário');
+        }
 
-    const handleLogout = async () => {
-        // Call loginService.logout to clear all authentication data
-        await loginService.logout();
+        setIsAuthenticated(hasToken);
+        setIsAdmin(loginService.isAdmin());
+      } catch (e) {
+        console.error('failed to read user from localStorage', e);
         setUserName(null);
-        // Redirect to login page
-        window.location.href = "/login";
+        setIsAuthenticated(false);
+        setIsAdmin(false);
+      }
     };
 
-    return (
-        <div className="bg-orange-500 fixed top-0 right-0 left-0 py-4 shadow-xl flex items-center justify-end px-4 gap-2">
-            <Link className="font-bold text-3xl text-white absolute left-1/2 transform -translate-x-1/2" href="/">
-                SYSPDV
+    loadUser();
+    window.addEventListener('userChanged', loadUser);
+    return () => {
+      window.removeEventListener('userChanged', loadUser);
+    };
+  }, []);
+
+  const handleLogout = async () => {
+    await loginService.logout();
+    setUserName(null);
+    setIsAuthenticated(false);
+    setIsAdmin(false);
+    window.location.href = '/login';
+  };
+
+  return (
+    <div className="bg-orange-500 fixed top-0 right-0 left-0 py-4 shadow-xl flex items-center justify-end px-4 gap-2">
+      <Link
+        className="font-bold text-3xl text-white absolute left-1/2 transform -translate-x-1/2"
+        href="/"
+      >
+        SYSPDV
+      </Link>
+
+      {isAuthenticated ? (
+        <>
+          <span className="font-bold text-sm text-white">
+            {userName || 'Usuário'}
+          </span>
+          {isAdmin ? (
+            <Link
+              href="/users"
+              className="font-bold text-sm bg-blue-500 text-white px-3 py-1 rounded
+              hover:bg-blue-600 transition shadow-[0_6px_8px_rgba(0,0,0,0.1)]"
+            >
+              Cadastrar
             </Link>
-            {userName ? (
-                <>
-                    <span className="font-bold text-sm text-white">{userName}</span>
-                    <FormButton
-                        onClick={handleLogout}
-                        className="font-bold text-sm bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition border"
-                    >
-                        Sair
-                    </FormButton>
-                </>
-            ) : (
-                <>
-                    <Link
-                        href="/login"
-                        className="font-bold text-sm bg-lime-600 text-white px-3 py-1 rounded hover:bg-lime-700 transition border"
-                    >
-                        Entrar
-                    </Link>
-                    <Link
-                        href="/users"
-                        className="font-bold text-sm bg-cyan-600 text-white px-3 py-1 rounded hover:bg-cyan-700 transition border"
-                    >
-                        Cadastrar
-                    </Link>
-                </>
-            )}
-        </div>
-    );
+          ) : null}
+          <FormButton
+            onClick={handleLogout}
+            className="font-bold text-sm bg-red-500 text-white 
+            hover:bg-red-600"
+          >
+            Sair
+          </FormButton>
+        </>
+      ) : null}
+    </div>
+  );
 }

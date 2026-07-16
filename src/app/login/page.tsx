@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import { Metadata } from 'next';
 
 import { FormLogin } from '../../components/FormLogin';
@@ -14,7 +13,10 @@ export const metadata: Metadata = {
 };
 
 export default function login() {
-  const handlerLogin = async (__prevState: ActionState, formData: FormData):Promise<ActionState> => {
+  const handlerLogin = async (
+    __prevState: ActionState,
+    formData: FormData
+  ): Promise<ActionState> => {
     'use server';
 
     const email = formData.get('email')?.toString();
@@ -66,10 +68,6 @@ export default function login() {
       <h1 className="text-4xl font-bold text-center">{PAGE_TITLE}</h1>
 
       <FormLogin action={handlerLogin} />
-
-      <Link className="text-center underline" href="/users">
-        Cadastrar usuário
-      </Link>
     </div>
   );
 }

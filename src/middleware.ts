@@ -50,8 +50,14 @@ interface PermissionRule {
 
 const permissionRules: PermissionRule[] = [
   // públicos
-  { path: '/api/users' },
   { path: '/api/orders' },
+
+  // users
+  {
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    path: '/api/users',
+    roles: ['ROLE_ADMIN'],
+  },
 
   // products
   {
@@ -82,12 +88,7 @@ function hasAccess(roles: string[], pathname: string, method: string): boolean {
 }
 
 function isPublicUnauthenticatedPath(pathname: string): boolean {
-  return (
-    pathname === '/' ||
-    pathname === '/login' ||
-    pathname === '/users' || // cadastro público
-    pathname.startsWith('/api/users')
-  );
+  return pathname === '/login';
 }
 
 /* ---------- Middleware ---------- */
@@ -103,7 +104,12 @@ export function middleware(req: NextRequest) {
 
   // sem token
   if (!token) {
+    if (pathname === '/') {
+      return NextResponse.redirect(new URL('/login', req.url));
+    }
+
     if (isPublicUnauthenticatedPath(pathname)) return NextResponse.next();
+
     const url = new URL('/login', req.url);
     url.searchParams.set('redirect', pathname);
     return NextResponse.redirect(url);
@@ -124,10 +130,10 @@ export function middleware(req: NextRequest) {
   if (!allowed) {
     // rotas de API => 403; páginas => redirect
     if (pathname.startsWith('/api/')) {
-      return new NextResponse(
-        JSON.stringify({ error: 'Forbidden' }),
-        { status: 403, headers: { 'Content-Type': 'application/json' } }
-      );
+      return new NextResponse(JSON.stringify({ error: 'Forbidden' }), {
+        status: 403,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
     return NextResponse.redirect(new URL('/', req.url));
   }
@@ -137,10 +143,16 @@ export function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
+    '/',
+    '/login',
     '/api/:path*',
     '/products/:path*',
+    '/categories/:path*',
+    '/orders/:path*',
     '/users/:path*',
     '/products',
+    '/categories',
+    '/orders',
     '/users',
   ],
 };

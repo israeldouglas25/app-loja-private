@@ -1,7 +1,5 @@
 import { apiFetch } from './apiClient';
 
-const TOKEN_EXPIRES_KEY = 'tokenExpires';
-
 interface LoginResponse {
   accessToken: string;
   tokenType: string;
@@ -10,7 +8,121 @@ interface LoginResponse {
   id?: number;
 }
 
+const AUTH_KEYS = {
+  token: 'token',
+  tokenExpires: 'tokenExpires',
+  user: 'user',
+};
+
+interface StoredUser {
+  name?: string;
+  id?: number;
+  roles?: string[];
+}
+
+export function getRolesFromToken(token: string): string[] {
+  const payload = decodeJwtPayload(token);
+  if (!payload) return [];
+
+  const roles = new Set<string>();
+  const payloadRoles = payload.roles;
+  const payloadAuthorities = payload.authorities;
+  const payloadRole = payload.role;
+
+  if (Array.isArray(payloadRoles)) {
+    payloadRoles.forEach((role) => {
+      if (typeof role === 'string') roles.add(role);
+    });
+  }
+
+  if (Array.isArray(payloadAuthorities)) {
+    payloadAuthorities.forEach((authority) => {
+      if (typeof authority === 'string') roles.add(authority);
+    });
+  }
+
+  if (typeof payloadRole === 'string') {
+    roles.add(payloadRole);
+  }
+
+  return Array.from(roles);
+}
+
+function decodeJwtPayload(token: string): Record<string, unknown> | null {
+  try {
+    const parts = token.split('.');
+    if (parts.length < 2) return null;
+
+    const base64Url = parts[1];
+    const normalized = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const padded = normalized + '='.repeat((4 - (normalized.length % 4)) % 4);
+    const decoded = globalThis.atob(padded);
+    return JSON.parse(decoded);
+  } catch {
+    return null;
+  }
+}
+
+function extractRolesFromToken(token: string): string[] {
+  return getRolesFromToken(token);
+}
+
+function getStoredUser(): StoredUser | null {
+  if (typeof window === 'undefined') return null;
+
+  const item = localStorage.getItem(AUTH_KEYS.user);
+  if (!item) return null;
+
+  try {
+    return JSON.parse(item) as StoredUser;
+  } catch {
+    return null;
+  }
+}
+
 export const loginService = {
+  clearAuthState: () => {
+    if (typeof window === 'undefined') return;
+
+    localStorage.removeItem(AUTH_KEYS.token);
+    localStorage.removeItem(AUTH_KEYS.tokenExpires);
+    localStorage.removeItem(AUTH_KEYS.user);
+
+    document.cookie = 'token=; path=/; max-age=0; sameSite=lax';
+    document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;';
+    document.cookie = 'token=; path=/; max-age=0;';
+
+    try {
+      if (typeof navigator !== 'undefined' && 'sendBeacon' in navigator) {
+        navigator.sendBeacon('/api/logout', JSON.stringify({}));
+      }
+    } catch (error) {
+      console.warn('Erro ao enviar logout no unload:', error);
+    }
+  },
+
+  getStoredUser: () => getStoredUser(),
+
+  getRoles: (): string[] => {
+    if (typeof window === 'undefined') return [];
+
+    const storedUser = getStoredUser();
+    if (storedUser?.roles?.length) {
+      return storedUser.roles;
+    }
+
+    const token = localStorage.getItem(AUTH_KEYS.token);
+    if (!token) return [];
+
+    return extractRolesFromToken(token);
+  },
+
+  isAdmin: (): boolean => {
+    return loginService
+      .getRoles()
+      .some((role) => role === 'ROLE_ADMIN' || role === 'ADMIN');
+  },
+
   // POST - login usuário
   login: async (data: { email: string; password: string }) => {
     const response = await apiFetch<LoginResponse>('/login', {
@@ -26,12 +138,16 @@ export const loginService = {
     */
     if (response && response.accessToken) {
       if (typeof window !== 'undefined') {
-        localStorage.setItem('token', response.accessToken);
+        localStorage.setItem(AUTH_KEYS.token, response.accessToken);
         // Store the expiration timestamp
         const expiresAt = Date.now() + response.expiresIn * 1000;
-        localStorage.setItem(TOKEN_EXPIRES_KEY, expiresAt.toString());
+        localStorage.setItem(AUTH_KEYS.tokenExpires, expiresAt.toString());
         // Store user name
-        localStorage.setItem('user', JSON.stringify({ name: response.name, id: response.id }));
+        const roles = getRolesFromToken(response.accessToken);
+        localStorage.setItem(
+          AUTH_KEYS.user,
+          JSON.stringify({ name: response.name, id: response.id, roles })
+        );
         // mirror token into cookie so that server actions can read it later
         document.cookie = `token=${response.accessToken}; path=/; max-age=${60 * 60 * 24 * 7}; sameSite=lax`;
       }
@@ -44,8 +160,8 @@ export const loginService = {
   isTokenExpired: (): boolean => {
     if (typeof window === 'undefined') return false;
 
-    const token = localStorage.getItem('token');
-    const tokenExpires = localStorage.getItem(TOKEN_EXPIRES_KEY);
+    const token = localStorage.getItem(AUTH_KEYS.token);
+    const tokenExpires = localStorage.getItem(AUTH_KEYS.tokenExpires);
 
     if (!token || !tokenExpires) return true;
 
@@ -63,25 +179,8 @@ export const loginService = {
   // Clear token and timestamp
   logout: async () => {
     if (typeof window !== 'undefined') {
-      // Step 1: Remove token from localStorage
-      localStorage.removeItem('token');
-      localStorage.removeItem(TOKEN_EXPIRES_KEY);
+      loginService.clearAuthState();
 
-      // Step 2: Remove user data
-      localStorage.removeItem('user');
-
-      // Step 3: Clear all cookies related to authentication using multiple methods
-      // Method 1: Clear with max-age=0
-      document.cookie = 'token=; path=/; max-age=0; sameSite=lax';
-
-      // Method 2: Clear with expires in the past
-      document.cookie =
-        'token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;';
-
-      // Method 3: Clear without sameSite (in case it was set differently)
-      document.cookie = 'token=; path=/; max-age=0;';
-
-      // Method 4: Call server endpoint to clear httpOnly cookie
       try {
         const response = await fetch('/api/logout', {
           method: 'POST',
