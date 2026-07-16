@@ -7,7 +7,7 @@ export function FormSearchDate({
 }: {
   onSearch: (startDate: string, endDate: string, paymentType?: string) => void;
 }) {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = new Date().toLocaleDateString().slice(0, 10);
   const [startDate, setStartDate] = useState(today);
   const [endDate, setEndDate] = useState(today);
   const [paymentType, setPaymentType] = useState<string | undefined>(undefined);
