@@ -16,7 +16,7 @@ export function Header() {
       try {
         const storedUser = loginService.getStoredUser();
         const hasToken =
-          Boolean(localStorage.getItem('token')) &&
+          Boolean(loginService.getStoredToken()) &&
           !loginService.isTokenExpired();
 
         if (storedUser?.name) {

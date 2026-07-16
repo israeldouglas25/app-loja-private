@@ -23,18 +23,6 @@ export function AuthGuard() {
       router.replace('/login');
       return;
     }
-
-    const handleBeforeUnload = () => {
-      loginService.clearAuthState();
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    window.addEventListener('pagehide', handleBeforeUnload);
-
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-      window.removeEventListener('pagehide', handleBeforeUnload);
-    };
   }, [pathname, router]);
 
   return null;

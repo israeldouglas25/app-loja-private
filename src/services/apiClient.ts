@@ -3,10 +3,24 @@ const API_BASE_URL = IS_BROWSER
   ? '' // in the browser we hit the Next.js proxy (/api)
   : process.env.BACKEND_URL || 'http://localhost:8080/api/v1';
 
-// pull token either from localStorage (client) or from a Next.js cookie
+function readCookie(name: string): string | null {
+  if (!IS_BROWSER) return null;
+
+  const cookieValue = document.cookie
+    .split(';')
+    .map((entry) => entry.trim())
+    .find((entry) => entry.startsWith(`${name}=`));
+
+  if (!cookieValue) return null;
+
+  const [, value] = cookieValue.split('=');
+  return value ? decodeURIComponent(value) : null;
+}
+
+// pull token either from cookie (preferred) or from localStorage as fallback
 async function getToken(): Promise<string | null> {
   if (IS_BROWSER) {
-    return localStorage.getItem('token');
+    return readCookie('token') || localStorage.getItem('token');
   }
 
   // server environment – dynamically import to avoid bundling into client
@@ -37,7 +51,8 @@ async function authHeaders(): Promise<Record<string, string>> {
 function isTokenExpired(): boolean {
   if (!IS_BROWSER) return false;
 
-  const tokenExpires = localStorage.getItem('tokenExpires');
+  const tokenExpires =
+    readCookie('tokenExpires') || localStorage.getItem('tokenExpires');
   if (!tokenExpires) return false;
 
   return Date.now() > parseInt(tokenExpires, 10);

@@ -14,10 +14,58 @@ const AUTH_KEYS = {
   user: 'user',
 };
 
+const AUTH_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
+
 interface StoredUser {
   name?: string;
   id?: number;
   roles?: string[];
+}
+
+function readCookie(name: string): string | null {
+  if (typeof document === 'undefined') return null;
+
+  const cookieValue = document.cookie
+    .split(';')
+    .map((entry) => entry.trim())
+    .find((entry) => entry.startsWith(`${name}=`));
+
+  if (!cookieValue) return null;
+
+  const [, value] = cookieValue.split('=');
+  return value ? decodeURIComponent(value) : null;
+}
+
+function writeCookie(
+  name: string,
+  value: string,
+  maxAgeSeconds = AUTH_COOKIE_MAX_AGE
+) {
+  if (typeof document === 'undefined') return;
+
+  document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=${maxAgeSeconds}; sameSite=lax`;
+}
+
+function deleteCookie(name: string) {
+  if (typeof document === 'undefined') return;
+
+  document.cookie = `${name}=; path=/; max-age=0; sameSite=lax`;
+  document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;`;
+}
+
+function getStoredToken(): string | null {
+  if (typeof window === 'undefined') return null;
+
+  return readCookie(AUTH_KEYS.token) || localStorage.getItem(AUTH_KEYS.token);
+}
+
+function getStoredTokenExpires(): string | null {
+  if (typeof window === 'undefined') return null;
+
+  return (
+    readCookie(AUTH_KEYS.tokenExpires) ||
+    localStorage.getItem(AUTH_KEYS.tokenExpires)
+  );
 }
 
 export function getRolesFromToken(token: string): string[] {
@@ -70,6 +118,15 @@ function extractRolesFromToken(token: string): string[] {
 function getStoredUser(): StoredUser | null {
   if (typeof window === 'undefined') return null;
 
+  const cookieUser = readCookie(AUTH_KEYS.user);
+  if (cookieUser) {
+    try {
+      return JSON.parse(cookieUser) as StoredUser;
+    } catch {
+      return null;
+    }
+  }
+
   const item = localStorage.getItem(AUTH_KEYS.user);
   if (!item) return null;
 
@@ -81,6 +138,8 @@ function getStoredUser(): StoredUser | null {
 }
 
 export const loginService = {
+  getStoredToken: () => getStoredToken(),
+
   clearAuthState: () => {
     if (typeof window === 'undefined') return;
 
@@ -88,17 +147,9 @@ export const loginService = {
     localStorage.removeItem(AUTH_KEYS.tokenExpires);
     localStorage.removeItem(AUTH_KEYS.user);
 
-    document.cookie = 'token=; path=/; max-age=0; sameSite=lax';
-    document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;';
-    document.cookie = 'token=; path=/; max-age=0;';
-
-    try {
-      if (typeof navigator !== 'undefined' && 'sendBeacon' in navigator) {
-        navigator.sendBeacon('/api/logout', JSON.stringify({}));
-      }
-    } catch (error) {
-      console.warn('Erro ao enviar logout no unload:', error);
-    }
+    deleteCookie(AUTH_KEYS.token);
+    deleteCookie(AUTH_KEYS.tokenExpires);
+    deleteCookie(AUTH_KEYS.user);
   },
 
   getStoredUser: () => getStoredUser(),
@@ -111,7 +162,7 @@ export const loginService = {
       return storedUser.roles;
     }
 
-    const token = localStorage.getItem(AUTH_KEYS.token);
+    const token = getStoredToken();
     if (!token) return [];
 
     return extractRolesFromToken(token);
@@ -138,18 +189,17 @@ export const loginService = {
     */
     if (response && response.accessToken) {
       if (typeof window !== 'undefined') {
-        localStorage.setItem(AUTH_KEYS.token, response.accessToken);
-        // Store the expiration timestamp
         const expiresAt = Date.now() + response.expiresIn * 1000;
-        localStorage.setItem(AUTH_KEYS.tokenExpires, expiresAt.toString());
-        // Store user name
         const roles = getRolesFromToken(response.accessToken);
-        localStorage.setItem(
-          AUTH_KEYS.user,
-          JSON.stringify({ name: response.name, id: response.id, roles })
-        );
-        // mirror token into cookie so that server actions can read it later
-        document.cookie = `token=${response.accessToken}; path=/; max-age=${60 * 60 * 24 * 7}; sameSite=lax`;
+        const nextUser = {
+          name: response.name,
+          id: response.id,
+          roles,
+        };
+
+        writeCookie(AUTH_KEYS.token, response.accessToken);
+        writeCookie(AUTH_KEYS.tokenExpires, expiresAt.toString());
+        writeCookie(AUTH_KEYS.user, JSON.stringify(nextUser));
       }
     }
 
@@ -160,8 +210,8 @@ export const loginService = {
   isTokenExpired: (): boolean => {
     if (typeof window === 'undefined') return false;
 
-    const token = localStorage.getItem(AUTH_KEYS.token);
-    const tokenExpires = localStorage.getItem(AUTH_KEYS.tokenExpires);
+    const token = getStoredToken();
+    const tokenExpires = getStoredTokenExpires();
 
     if (!token || !tokenExpires) return true;
 

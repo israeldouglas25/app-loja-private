@@ -102,23 +102,29 @@ export function middleware(req: NextRequest) {
     (req.headers.get('authorization') || '').replace(/^Bearer\s+/, '') ||
     null;
 
+  const payload = token ? decodeJwt(token) : null;
+
+  // rota pública de login: se já estiver autenticado, encaminha para a home
+  if (isPublicUnauthenticatedPath(pathname)) {
+    if (payload && !isExpired(payload)) {
+      return NextResponse.redirect(new URL('/', req.url));
+    }
+    return NextResponse.next();
+  }
+
   // sem token
-  if (!token) {
+  if (!token || !payload) {
     if (pathname === '/') {
       return NextResponse.redirect(new URL('/login', req.url));
     }
-
-    if (isPublicUnauthenticatedPath(pathname)) return NextResponse.next();
 
     const url = new URL('/login', req.url);
     url.searchParams.set('redirect', pathname);
     return NextResponse.redirect(url);
   }
 
-  const payload = decodeJwt(token);
-
   // token expirado/ inválido
-  if (!payload || isExpired(payload)) {
+  if (isExpired(payload)) {
     const res = NextResponse.redirect(new URL('/login', req.url));
     res.cookies.delete('token');
     return res;

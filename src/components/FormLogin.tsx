@@ -40,29 +40,21 @@ export const FormLogin: FC<FormLoginProps> = ({ action }) => {
   useEffect(() => {
     if (!response) return;
 
-    const nextUser = response.user
-      ? {
-          ...response.user,
-          roles: response.token ? getRolesFromToken(response.token) : undefined,
-        }
-      : undefined;
-
-    if (nextUser) {
-      localStorage.setItem('user', JSON.stringify(nextUser));
-    }
-
     if (response?.token) {
-      localStorage.setItem('token', response.token);
-      console.log(
-        'Token armazenado no localStorage com sucesso:',
-        response.token
-      );
-    }
+      const expiresAt = Date.now() + (response.expiresIn ?? 0) * 1000;
+      const nextUser = response.user
+        ? {
+            ...response.user,
+            roles: getRolesFromToken(response.token),
+          }
+        : undefined;
 
-    if (response?.expiresIn) {
-      const expiresAt = Date.now() + response.expiresIn * 1000;
-      localStorage.setItem('tokenExpires', expiresAt.toString());
-      console.log('Token expires at:', new Date(expiresAt).toISOString());
+      document.cookie = `token=${encodeURIComponent(response.token)}; path=/; max-age=${60 * 60 * 24 * 7}; sameSite=lax`;
+      document.cookie = `tokenExpires=${expiresAt}; path=/; max-age=${60 * 60 * 24 * 7}; sameSite=lax`;
+
+      if (nextUser) {
+        document.cookie = `user=${encodeURIComponent(JSON.stringify(nextUser))}; path=/; max-age=${60 * 60 * 24 * 7}; sameSite=lax`;
+      }
     }
 
     if (response?.token || response?.user) {

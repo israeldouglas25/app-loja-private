@@ -39,16 +39,6 @@ export default function login() {
         };
       }
 
-      // if we're running on the server, persist the token as a cookie
-      if (typeof window === 'undefined' && data?.accessToken) {
-        (await cookies()).set('token', data.accessToken, {
-          httpOnly: true,
-          path: '/',
-          sameSite: 'lax',
-          maxAge: 60 * 60 * 24 * 7, // one week
-        });
-      }
-
       return {
         message: 'Login realizado com sucesso',
         color: 'bg-green-400',
