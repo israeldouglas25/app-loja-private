@@ -153,10 +153,17 @@ export const FormProduct: FC<FormProductProps> = ({ action }) => {
           <FormInput
             id="stockQuantity"
             type="number"
+            min="1"
             placeholder="Quantidade em estoque"
             value={stockQuantity}
-            setValue={setStockQuantity}
+            setValue={(value) => {
+              const num = Number(value);
+              if (value === "" || num >= 1) {
+                setStockQuantity(value);
+              }
+            }}
           />
+
         </div>        
         <div className="grid gap-y-2">
           <label htmlFor="categoryId" className="font-semibold">
