@@ -1,6 +1,12 @@
 'use client';
 
-import { useCallback, useEffect, useState, type ReactNode } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { FormResponse } from '../components/FormResponse';
@@ -82,6 +88,80 @@ export function GenericTable<T extends TableItem>({
   const [page, setPage] = useState(1);
   const [serverTotalPages, setServerTotalPages] = useState(1);
   const [editing, setEditing] = useState<{ [id: number]: T }>({});
+  const [sortConfig, setSortConfig] = useState<{
+    key: string | null;
+    direction: 'asc' | 'desc';
+  }>({ key: null, direction: 'asc' });
+
+  const getValueByPath = (item: unknown, path: string) => {
+    if (!path) return undefined;
+
+    const segments = path.split('.');
+    let current: unknown = item;
+
+    for (const segment of segments) {
+      if (current === null || current === undefined) return undefined;
+      if (typeof current !== 'object' || Array.isArray(current))
+        return undefined;
+      if (!(segment in current)) return undefined;
+      current = (current as Record<string, unknown>)[segment];
+    }
+
+    return current;
+  };
+
+  const compareValues = (
+    left: unknown,
+    right: unknown,
+    direction: 'asc' | 'desc'
+  ) => {
+    if (left == null && right == null) return 0;
+    if (left == null) return 1;
+    if (right == null) return -1;
+
+    if (typeof left === 'number' && typeof right === 'number') {
+      return direction === 'asc' ? left - right : right - left;
+    }
+
+    return direction === 'asc'
+      ? String(left).localeCompare(String(right), 'pt-BR', { numeric: true })
+      : String(right).localeCompare(String(left), 'pt-BR', { numeric: true });
+  };
+
+  const getSortableValue = useCallback((item: unknown, path: string) => {
+    const value = getValueByPath(item, path);
+
+    if (value === null || value === undefined) return value;
+
+    if (typeof value === 'object' && !Array.isArray(value)) {
+      const record = value as Record<string, unknown>;
+      const preferredKeys = [
+        'name',
+        'title',
+        'label',
+        'email',
+        'username',
+        'code',
+        'id',
+      ];
+
+      for (const preferredKey of preferredKeys) {
+        const nestedValue = record[preferredKey];
+        if (nestedValue !== undefined && nestedValue !== null) {
+          return nestedValue;
+        }
+      }
+    }
+
+    return value;
+  }, []);
+
+  const handleSort = (key: string) => {
+    setSortConfig((prev) => ({
+      key,
+      direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc',
+    }));
+  };
 
   useEffect(() => {
     if (response) {
@@ -228,36 +308,62 @@ export function GenericTable<T extends TableItem>({
     }
   }, [page, totalPages]);
 
+  const sortedItems = useMemo(() => {
+    if (!sortConfig.key || useServerPagination) return items;
+
+    const key = sortConfig.key;
+
+    return [...items].sort((a, b) => {
+      const av = getSortableValue(a, key);
+      const bv = getSortableValue(b, key);
+      return compareValues(av, bv, sortConfig.direction);
+    });
+  }, [items, sortConfig, useServerPagination, getSortableValue]);
+
   const startIndex = (page - 1) * pageSize;
   const pageItems = useServerPagination
     ? items
-    : items.slice(startIndex, startIndex + pageSize);
+    : sortedItems.slice(startIndex, startIndex + pageSize);
 
   const allKeys = Array.from(
     new Set([...items.flatMap((u) => Object.keys(u)), ...(visibleFields ?? [])])
   );
   const displayKeys = visibleFields ?? allKeys;
 
+  const sortedPageItems = useMemo(() => {
+    if (!sortConfig.key) return pageItems;
+    const key = sortConfig.key;
+    return [...pageItems].sort((a, b) => {
+      const av = getSortableValue(a, key);
+      const bv = getSortableValue(b, key);
+      return compareValues(av, bv, sortConfig.direction);
+    });
+  }, [pageItems, sortConfig, getSortableValue]);
+
   const getColumnLabel = (fieldName: string) =>
     columnLabels[fieldName] ||
     fieldName.charAt(0).toUpperCase() + fieldName.slice(1);
 
   const renderCellValue = (key: string, value: unknown, item: T) => {
+    const resolvedValue = getValueByPath(item, key) ?? value;
+
     if (cellRenderers?.[key]) {
-      return cellRenderers[key](value, item);
+      return cellRenderers[key](resolvedValue, item);
     }
 
-    if (Array.isArray(value)) {
+    if (Array.isArray(resolvedValue)) {
       return (
-        <span>{value.length === 0 ? '—' : `${value.length} item(s)`}</span>
+        <span>
+          {resolvedValue.length === 0 ? '—' : `${resolvedValue.length} item(s)`}
+        </span>
       );
     }
 
-    if (value !== null && typeof value === 'object') {
-      return <span>{JSON.stringify(value)}</span>;
+    if (resolvedValue !== null && typeof resolvedValue === 'object') {
+      return <span>{JSON.stringify(resolvedValue)}</span>;
     }
 
-    return <span>{formatIfCurrency(key, value ?? '')}</span>;
+    return <span>{formatIfCurrency(key, resolvedValue ?? '')}</span>;
   };
 
   if (loading) return <p className="text-center py-4">{loadingMessage}</p>;
@@ -275,9 +381,12 @@ export function GenericTable<T extends TableItem>({
               {displayKeys.map((key) => (
                 <th
                   key={key}
-                  className="border border-orange-600 px-4 py-2 text-left font-semibold capitalize"
+                  onClick={() => handleSort(key)}
+                  className="border border-orange-600 px-4 py-2 text-left font-semibold capitalize cursor-pointer select-none"
                 >
                   {getColumnLabel(key)}
+                  {sortConfig.key === key &&
+                    (sortConfig.direction === 'asc' ? ' ▲' : ' ▼')}
                 </th>
               ))}
               <th className="border border-orange-600 px-4 py-2 text-center font-semibold">
@@ -286,7 +395,7 @@ export function GenericTable<T extends TableItem>({
             </tr>
           </thead>
           <tbody>
-            {pageItems.map((item, index) => {
+            {sortedPageItems.map((item, index) => {
               const isEditing = !!editing[item.id];
               const rowData = editing[item.id] || item;
 
@@ -301,7 +410,7 @@ export function GenericTable<T extends TableItem>({
                         <input
                           type="text"
                           className="w-full p-1 border rounded"
-                          value={String(rowData[key] ?? '')}
+                          value={String(getValueByPath(rowData, key) ?? '')}
                           onChange={(e) =>
                             setEditing((prev) => ({
                               ...prev,
