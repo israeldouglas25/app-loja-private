@@ -50,8 +50,8 @@ export async function GET(req: NextRequest) {
   const roles = extractRoles(payload);
   const isAdmin = roles.includes('ROLE_ADMIN');
 
-  // ADMIN -> /orders ; demais -> /orders/filter
-  const path = isAdmin ? '/orders' : '/orders/filter';
+  // ADMIN -> /orders ; demais -> /orders/user/authentication
+  const path = isAdmin ? '/orders' : '/orders/user/authentication';
   const backendUrl = new URL(`${API_BASE_URL}${path}`);
   backendUrl.search = req.nextUrl.search;
 
