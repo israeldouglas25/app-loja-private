@@ -5,7 +5,7 @@ import { OrderItem, ordersService, UserType } from '../services/ordersService';
 import { GenericTable } from '../utils/GenericTable';
 import { formatCurrency } from '../utils/currencyFormatter';
 import { ButtonReturn } from './ButtonReturn';
-import { FormSearchDate } from './FormSearchDate';
+import { FormSearchDate, TodayLocalISO } from './FormSearchDate';
 
 export type Order = {
   id: number;
@@ -19,7 +19,7 @@ export type Order = {
 };
 
 export function FormOrdersList() {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = TodayLocalISO();
   const [expandedItems, setExpandedItems] = useState<Record<number, boolean>>(
     {}
   );
