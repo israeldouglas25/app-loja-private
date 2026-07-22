@@ -4,7 +4,6 @@ import { useMemo, useState } from 'react';
 import { OrderItem, ordersService, UserType } from '../services/ordersService';
 import { GenericTable } from '../utils/GenericTable';
 import { formatCurrency } from '../utils/currencyFormatter';
-import { ButtonReturn } from './ButtonReturn';
 import { FormSearchDate, TodayLocalISO } from './FormSearchDate';
 
 export type Order = {
@@ -154,7 +153,6 @@ export function FormOrdersList() {
 
   return (
     <div>
-      <ButtonReturn />
       <div className="mt-4 flex flex-col sm:flex-row sm:items-stretch gap-4">
         <FormSearchDate
           onSearch={(startDate, endDate, paymentType) => {

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Metadata } from "next";
 
 import { FormCategoriesTable as FormCategoryList } from "@/components/FormCategoryList";
+import { ButtonReturn } from "@/components/ButtonReturn";
 
 const PAGE_TITLE = "Lista de Categorias";
 
@@ -16,9 +17,12 @@ export default function ListCategories() {
 
       <FormCategoryList />
 
-      <Link className="text-center underline" href="/">
-        Voltar para a página inicial
-      </Link>
+      <div className="flex flex-col sm:flex-row sm:items-stretch gap-4">
+        <ButtonReturn/>
+        <Link className="sm:ml-auto self-stretch flex items-center rounded underline" href="/">
+          Voltar para a página inicial
+        </Link>
+      </div>
     </div>
   );
 }

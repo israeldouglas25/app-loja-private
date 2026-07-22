@@ -2,7 +2,6 @@
 
 import { categoriesService } from "../services/categoriesService";
 import { GenericTable } from "../utils/GenericTable";
-import { ButtonReturn } from "./ButtonReturn";
 
 export type Category = {
   id: number;
@@ -12,7 +11,6 @@ export type Category = {
 export function FormCategoriesTable() {
   return (
     <div>
-      <ButtonReturn/>
       <GenericTable<Category>
         service={categoriesService}
         title="Lista de Categorias"

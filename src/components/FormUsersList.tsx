@@ -2,7 +2,6 @@
 
 import { GenericTable } from "@/utils/GenericTable";
 import { usersService } from "../services/usersService";
-import { ButtonReturn } from "./ButtonReturn";
 
 export type User = {
   id: number;
@@ -14,7 +13,6 @@ export type User = {
 export function FormUsersList() {
   return (
     <div>
-      <ButtonReturn/> 
       <GenericTable<User>
         service={usersService}
         title="Lista de Usuários"

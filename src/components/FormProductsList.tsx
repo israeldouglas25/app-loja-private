@@ -2,7 +2,6 @@
 
 import { productsService } from "../services/productsService";
 import { GenericTable } from "../utils/GenericTable";
-import { ButtonReturn } from "./ButtonReturn";
 
 export type Product = {
   id: number;
@@ -16,7 +15,6 @@ export type Product = {
 export function FormProductsList() {
   return (
     <div>
-      <ButtonReturn/>
       <GenericTable<Product>
         service={productsService}
         title="Lista de Produtos"
