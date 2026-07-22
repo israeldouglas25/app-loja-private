@@ -29,14 +29,14 @@ export const usersService = {
   create: async (data: UserCreateDto) =>
     apiFetch<User>('/users', { method: 'POST', body: JSON.stringify(data) }),
 
-  // PUT - Atualizar completamente
+  // PUT - Atualizar completamente (também aceita dados parciais para compatibilidade com GenericTable)
   update: async (id: number, data: Partial<User>) => {
     await apiFetch(`/users/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
     });
   },
-
+  
   // DELETE - Deletar
   delete: async (id: number) => {
     await apiFetch(`/users/${id}`, { method: 'DELETE' });

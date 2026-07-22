@@ -40,15 +40,7 @@ export const productsService = {
       body: JSON.stringify(data),
     });
   },
-
-  // PATCH - Atualizar parcialmente
-  partialUpdate: async (id: number, data: Partial<Product>) => {
-    await apiFetch(`/products/${id}`, {
-      method: 'PATCH',
-      body: JSON.stringify(data),
-    });
-  },
-
+  
   // DELETE - Deletar
   delete: async (id: number) => {
     await apiFetch(`/products/${id}`, { method: 'DELETE' });

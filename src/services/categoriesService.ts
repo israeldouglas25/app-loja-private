@@ -25,7 +25,7 @@ export const categoriesService = {
         method: 'GET',
       }
     ),
-
+    
   // POST - Criar categoria
   create: async (data: CategoryCreateDto) =>
     apiFetch<Category>('/categories', {
@@ -37,14 +37,6 @@ export const categoriesService = {
   update: async (id: number, data: Partial<Category>) => {
     await apiFetch(`/categories/${id}`, {
       method: 'PUT',
-      body: JSON.stringify(data),
-    });
-  },
-
-  // PATCH - Atualizar parcialmente
-  partialUpdate: async (id: number, data: Partial<Category>) => {
-    await apiFetch(`/categories/${id}`, {
-      method: 'PATCH',
       body: JSON.stringify(data),
     });
   },
