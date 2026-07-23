@@ -65,7 +65,9 @@ export function FormOrder() {
   const filteredProducts = useMemo(
     () =>
       products.filter((product) =>
-        product.name.toLowerCase().includes(searchText.toLowerCase())
+        product.code.toString().includes(searchText.toLowerCase()) ||
+        product.name.toLowerCase().includes(searchText.toLowerCase()) ||
+        product.category.toLowerCase().includes(searchText.toLowerCase())
       ),
     [products, searchText]
   );
@@ -236,7 +238,15 @@ export function FormOrder() {
                     <table className="w-full border-collapse">
                       <thead>
                         <tr>
-                          <th className="border px-3 py-2 text-left">Nome</th>
+                          <th className="border px-3 py-2 text-left">
+                            ID
+                          </th>
+                          <th className="border px-3 py-2 text-left">
+                            Codigo
+                          </th>
+                          <th className="border px-3 py-2 text-left">
+                            Nome
+                          </th>
                           <th className="border px-3 py-2 text-left">
                             Categoria
                           </th>
@@ -246,14 +256,16 @@ export function FormOrder() {
                           <th className="border px-3 py-2 text-left">
                             Valor unitário
                           </th>
-                          <th className="border px-3 py-2 text-left">Ações</th>
+                          <th className="border px-3 py-2 text-left">
+                            Ações
+                          </th>
                         </tr>
                       </thead>
                       <tbody>
                         {filteredProducts.length === 0 ? (
                           <tr>
                             <td
-                              colSpan={5}
+                              colSpan={7}
                               className="border px-3 py-4 text-center"
                             >
                               Nenhum produto encontrado.
@@ -264,6 +276,12 @@ export function FormOrder() {
                             const quantity = selectedItems[product.id] || 0;
                             return (
                               <tr key={product.id}>
+                                <td className="border px-3 py-2">
+                                  {product.id}
+                                </td>
+                                <td className="border px-3 py-2">
+                                  {product.code}
+                                </td>
                                 <td className="border px-3 py-2">
                                   {product.name}
                                 </td>
