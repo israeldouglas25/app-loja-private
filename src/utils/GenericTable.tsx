@@ -11,6 +11,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { FormResponse } from '../components/FormResponse';
 import { formatIfCurrency } from './currencyFormatter';
+import { FormButton } from '@/components/FormButton';
 
 export interface TableItem {
   id: number;
@@ -52,12 +53,190 @@ export interface GenericTableProps<T extends TableItem> {
   cellRenderers?: Record<string, (value: unknown, item: T) => ReactNode>;
   reloadKey?: number;
   useServerPagination?: boolean;
+  searchFields?: string[];
+  searchPlaceholder?: string;
 }
 
 interface ApiError {
   isTokenExpired?: boolean;
   status?: number;
   message?: string;
+}
+
+type SortConfig = {
+  key: string | null;
+  direction: 'asc' | 'desc';
+};
+
+interface TableHeaderProps {
+  displayKeys: string[];
+  handleSort: (key: string) => void;
+  sortConfig: SortConfig;
+  getColumnLabel: (fieldName: string) => string;
+}
+
+function TableHeader({
+  displayKeys,
+  handleSort,
+  sortConfig,
+  getColumnLabel,
+}: TableHeaderProps) {
+  return (
+    <thead>
+      <tr className="bg-orange-500 text-white">
+        {displayKeys.map((key) => (
+          <th
+            key={key}
+            onClick={() => handleSort(key)}
+            className="border border-orange-600 px-4 py-2 text-left font-semibold capitalize cursor-pointer select-none"
+          >
+            {getColumnLabel(key)}
+            {sortConfig.key === key &&
+              (sortConfig.direction === 'asc' ? ' ▲' : ' ▼')}
+          </th>
+        ))}
+        <th className="border border-orange-600 px-4 py-2 text-center font-semibold">
+          Ações
+        </th>
+      </tr>
+    </thead>
+  );
+}
+
+interface TableRowProps<T extends TableItem> {
+  item: T;
+  index: number;
+  displayKeys: string[];
+  disabledFields: string[];
+  isEditing: boolean;
+  rowData: T;
+  getValueByPath: (item: unknown, path: string) => unknown;
+  onEditChange: (itemId: number, key: string, value: string) => void;
+  onSave: (id: number) => void;
+  onCancel: (id: number) => void;
+  onStartEdit: (item: T) => void;
+  onDelete: (id: number) => void;
+  renderCellValue: (key: string, value: unknown, item: T) => ReactNode;
+}
+
+function TableRow<T extends TableItem>({
+  item,
+  index,
+  displayKeys,
+  disabledFields,
+  isEditing,
+  rowData,
+  getValueByPath,
+  onEditChange,
+  onSave,
+  onCancel,
+  onStartEdit,
+  onDelete,
+  renderCellValue,
+}: TableRowProps<T>) {
+  return (
+    <tr key={item.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+      {displayKeys.map((key) => (
+        <td key={key} className="border border-gray-300 px-4 py-2">
+          {isEditing && !disabledFields.includes(key) ? (
+            <input
+              type="text"
+              className="w-full rounded border p-1"
+              value={String(getValueByPath(rowData, key) ?? '')}
+              onChange={(e) => onEditChange(item.id, key, e.target.value)}
+            />
+          ) : (
+            renderCellValue(key, rowData[key], item)
+          )}
+        </td>
+      ))}
+      <td className="border border-gray-300 px-4 py-2">
+        <div className="flex items-center justify-center gap-2">
+          {isEditing ? (
+            <>
+              <button
+                onClick={() => onSave(item.id)}
+                className="rounded p-1 transition hover:bg-green-100"
+                title="Salvar"
+              >
+                <Image src="/save.png" alt="Salvar" width={18} height={18} />
+              </button>
+              <button
+                onClick={() => onCancel(item.id)}
+                className="rounded p-1 transition hover:bg-red-100"
+                title="Cancelar"
+              >
+                <Image
+                  src="/cancel.png"
+                  alt="Cancelar"
+                  width={18}
+                  height={18}
+                />
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={() => onStartEdit(item)}
+                className="rounded p-1 transition hover:bg-yellow-100"
+                title="Editar"
+              >
+                <Image src="/edit.png" alt="Editar" width={18} height={18} />
+              </button>
+              <button
+                onClick={() => onDelete(item.id)}
+                className="rounded p-1 transition hover:bg-red-100"
+                title="Excluir"
+              >
+                <Image
+                  src="/lixeira.png"
+                  alt="Excluir"
+                  width={18}
+                  height={18}
+                />
+              </button>
+            </>
+          )}
+        </div>
+      </td>
+    </tr>
+  );
+}
+
+interface PaginationControlsProps {
+  page: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+}
+
+function PaginationControls({
+  page,
+  totalPages,
+  onPageChange,
+}: PaginationControlsProps) {
+  if (totalPages <= 1) return null;
+
+  return (
+    <div className="mt-6 flex items-center justify-center gap-4">
+      <button
+        disabled={page === 1}
+        onClick={() => onPageChange(page - 1)}
+        className="rounded border bg-orange-500 px-4 py-2 font-bold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        ← Anterior
+      </button>
+      <span className="font-medium">
+        Página {page} de {totalPages}
+      </span>
+      <button
+        disabled={page === totalPages}
+        onClick={() => onPageChange(page + 1)}
+        className="rounded border bg-orange-500 px-4 py-2 font-bold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        Próxima →
+      </button>
+    </div>
+  );
 }
 
 function isApiError(err: unknown): err is ApiError {
@@ -77,10 +256,13 @@ export function GenericTable<T extends TableItem>({
   cellRenderers,
   reloadKey = 0,
   useServerPagination = false,
+  searchFields,
+  searchPlaceholder = 'Buscar...',
 }: GenericTableProps<T>) {
   const router = useRouter();
   const [items, setItems] = useState<T[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
   const [response, setResponse] = useState<{
     message: string;
     color: string;
@@ -88,10 +270,10 @@ export function GenericTable<T extends TableItem>({
   const [page, setPage] = useState(1);
   const [serverTotalPages, setServerTotalPages] = useState(1);
   const [editing, setEditing] = useState<{ [id: number]: T }>({});
-  const [sortConfig, setSortConfig] = useState<{
-    key: string | null;
-    direction: 'asc' | 'desc';
-  }>({ key: null, direction: 'asc' });
+  const [sortConfig, setSortConfig] = useState<SortConfig>({
+    key: null,
+    direction: 'asc',
+  });
 
   const getValueByPath = (item: unknown, path: string) => {
     if (!path) return undefined;
@@ -268,6 +450,19 @@ export function GenericTable<T extends TableItem>({
       return clone;
     });
 
+  const handleEditChange = useCallback(
+    (itemId: number, key: string, value: string) => {
+      setEditing((prev) => ({
+        ...prev,
+        [itemId]: {
+          ...prev[itemId],
+          [key]: value,
+        },
+      }));
+    },
+    []
+  );
+
   const saveEdit = async (id: number) => {
     const updated = editing[id];
     if (!updated) return;
@@ -298,9 +493,34 @@ export function GenericTable<T extends TableItem>({
     }
   };
 
+  const resolvedSearchFields = useMemo(() => {
+    if (searchFields?.length) return searchFields;
+    return ['name', 'email', 'code'];
+  }, [searchFields]);
+
+  const normalizeText = useCallback((value: unknown) => {
+    return String(value ?? '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase();
+  }, []);
+
+  const filteredItems = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+
+    if (!term) return items;
+
+    return items.filter((item) =>
+      resolvedSearchFields.some((field) => {
+        const value = getValueByPath(item, field);
+        return normalizeText(value).includes(term);
+      })
+    );
+  }, [items, normalizeText, resolvedSearchFields, searchTerm]);
+
   const totalPages = useServerPagination
     ? serverTotalPages
-    : Math.max(1, Math.ceil(items.length / pageSize));
+    : Math.max(1, Math.ceil(filteredItems.length / pageSize));
 
   useEffect(() => {
     if (page > totalPages) {
@@ -309,20 +529,20 @@ export function GenericTable<T extends TableItem>({
   }, [page, totalPages]);
 
   const sortedItems = useMemo(() => {
-    if (!sortConfig.key || useServerPagination) return items;
+    if (!sortConfig.key || useServerPagination) return filteredItems;
 
     const key = sortConfig.key;
 
-    return [...items].sort((a, b) => {
+    return [...filteredItems].sort((a, b) => {
       const av = getSortableValue(a, key);
       const bv = getSortableValue(b, key);
       return compareValues(av, bv, sortConfig.direction);
     });
-  }, [items, sortConfig, useServerPagination, getSortableValue]);
+  }, [filteredItems, sortConfig, useServerPagination, getSortableValue]);
 
   const startIndex = (page - 1) * pageSize;
   const pageItems = useServerPagination
-    ? items
+    ? filteredItems
     : sortedItems.slice(startIndex, startIndex + pageSize);
 
   const allKeys = Array.from(
@@ -374,145 +594,74 @@ export function GenericTable<T extends TableItem>({
     <div className="mt-6">
       <FormResponse response={response} />
 
+      <div className="mb-4 flex items-center gap-2">
+        <input
+          type="text"
+          value={searchTerm}
+          onChange={(event) => {
+            setSearchTerm(event.target.value);
+            setPage(1);
+          }}
+          placeholder={searchPlaceholder}
+          className="w-full rounded border border-gray-300 px-3 py-2 focus:border-orange-500 focus:outline-none"
+        />
+        {searchTerm && (
+          <FormButton
+            type="button"
+            onClick={() => {
+              setSearchTerm('');
+              setPage(1);
+            }}
+            className="rounded border border-gray-300 px-3 py-2 text-sm text-gray-600 hover:bg-gray-100"
+          >
+            Limpar
+          </FormButton>
+        )}
+      </div>
+
       <div className="overflow-x-auto rounded border">
         <table className="w-full border-collapse">
-          <thead>
-            <tr className="bg-orange-500 text-white">
-              {displayKeys.map((key) => (
-                <th
-                  key={key}
-                  onClick={() => handleSort(key)}
-                  className="border border-orange-600 px-4 py-2 text-left font-semibold capitalize cursor-pointer select-none"
-                >
-                  {getColumnLabel(key)}
-                  {sortConfig.key === key &&
-                    (sortConfig.direction === 'asc' ? ' ▲' : ' ▼')}
-                </th>
-              ))}
-              <th className="border border-orange-600 px-4 py-2 text-center font-semibold">
-                Ações
-              </th>
-            </tr>
-          </thead>
+          <TableHeader
+            displayKeys={displayKeys}
+            handleSort={handleSort}
+            sortConfig={sortConfig}
+            getColumnLabel={getColumnLabel}
+          />
           <tbody>
             {sortedPageItems.map((item, index) => {
               const isEditing = !!editing[item.id];
               const rowData = editing[item.id] || item;
 
               return (
-                <tr
+                <TableRow
                   key={item.id}
-                  className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}
-                >
-                  {displayKeys.map((key) => (
-                    <td key={key} className="border border-gray-300 px-4 py-2">
-                      {isEditing && !disabledFields.includes(key) ? (
-                        <input
-                          type="text"
-                          className="w-full p-1 border rounded"
-                          value={String(getValueByPath(rowData, key) ?? '')}
-                          onChange={(e) =>
-                            setEditing((prev) => ({
-                              ...prev,
-                              [item.id]: {
-                                ...prev[item.id],
-                                [key]: e.target.value,
-                              },
-                            }))
-                          }
-                        />
-                      ) : (
-                        renderCellValue(key, rowData[key], item)
-                      )}
-                    </td>
-                  ))}
-                  <td className="border border-gray-300 px-4 py-2">
-                    <div className="flex items-center justify-center gap-2">
-                      {isEditing ? (
-                        <>
-                          <button
-                            onClick={() => saveEdit(item.id)}
-                            className="p-1 hover:bg-green-100 rounded transition"
-                            title="Salvar"
-                          >
-                            <Image
-                              src="/save.png"
-                              alt="Salvar"
-                              width={18}
-                              height={18}
-                            />
-                          </button>
-                          <button
-                            onClick={() => cancelEdit(item.id)}
-                            className="p-1 hover:bg-red-100 rounded transition"
-                            title="Cancelar"
-                          >
-                            <Image
-                              src="/cancel.png"
-                              alt="Cancelar"
-                              width={18}
-                              height={18}
-                            />
-                          </button>
-                        </>
-                      ) : (
-                        <>
-                          <button
-                            onClick={() => startEdit(item)}
-                            className="p-1 hover:bg-yellow-100 rounded transition"
-                            title="Editar"
-                          >
-                            <Image
-                              src="/edit.png"
-                              alt="Editar"
-                              width={18}
-                              height={18}
-                            />
-                          </button>
-                          <button
-                            onClick={() => deleteItem(item.id)}
-                            className="p-1 hover:bg-red-100 rounded transition"
-                            title="Excluir"
-                          >
-                            <Image
-                              src="/lixeira.png"
-                              alt="Excluir"
-                              width={18}
-                              height={18}
-                            />
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  </td>
-                </tr>
+                  item={item}
+                  index={index}
+                  displayKeys={displayKeys}
+                  disabledFields={disabledFields}
+                  isEditing={isEditing}
+                  rowData={rowData}
+                  getValueByPath={getValueByPath}
+                  onEditChange={handleEditChange}
+                  onSave={saveEdit}
+                  onCancel={cancelEdit}
+                  onStartEdit={startEdit}
+                  onDelete={deleteItem}
+                  renderCellValue={renderCellValue}
+                />
               );
             })}
           </tbody>
         </table>
       </div>
 
-      {totalPages > 1 && (
-        <div className="flex justify-center items-center gap-4 mt-6">
-          <button
-            disabled={page === 1}
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            className="font-bold bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded border disabled:opacity-50 disabled:cursor-not-allowed transition"
-          >
-            ← Anterior
-          </button>
-          <span className="font-medium">
-            Página {page} de {totalPages}
-          </span>
-          <button
-            disabled={page === totalPages}
-            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            className="font-bold bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded border disabled:opacity-50 disabled:cursor-not-allowed transition"
-          >
-            Próxima →
-          </button>
-        </div>
-      )}
+      <PaginationControls
+        page={page}
+        totalPages={totalPages}
+        onPageChange={(nextPage) =>
+          setPage(() => Math.min(totalPages, Math.max(1, nextPage)))
+        }
+      />
     </div>
   );
 }
