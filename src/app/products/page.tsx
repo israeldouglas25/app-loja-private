@@ -19,11 +19,12 @@ export default function Products() {
 
     const name = formData.get('name')?.toString();
     const code = formData.get('code')?.toString();
+    const reference = formData.get('reference')?.toString();
     const stockQuantity = formData.get('stockQuantity')?.toString();
     const categoryId = formData.get('categoryId')?.toString();
     const unitValue = formData.get('unitValue')?.toString();
 
-    if (!name || !code || !stockQuantity || !categoryId || !unitValue) {
+    if (!name || !code || !reference || !stockQuantity || !categoryId || !unitValue) {
       return { message: 'Preencha todos os campos', color: 'bg-red-400' };
     }
 
@@ -31,6 +32,7 @@ export default function Products() {
       const data = await productsService.create({
         name: name,
         code: parseInt(code || '0'),
+        reference: reference || '',
         stockQuantity: parseInt(stockQuantity || '0'),
         categoryId: parseInt(categoryId || '0'),
         unitValue: parseFloat(unitValue || '0'),

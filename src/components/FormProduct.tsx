@@ -20,6 +20,7 @@ export const FormProduct: FC<FormProductProps> = ({ action }) => {
   const [name, setName] = useState('');
   const [stockQuantity, setStockQuantity] = useState('');
   const [code, setCode] = useState('');
+  const [reference, setReference] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [unitValue, setUnitValue] = useState('');
   const [categories, setCategories] = useState<Category[]>([]);
@@ -76,6 +77,7 @@ export const FormProduct: FC<FormProductProps> = ({ action }) => {
     setName('');
     setStockQuantity('');
     setCode('');
+    setReference('');
     setCategoryId('');
     setUnitValue('');
   };
@@ -132,6 +134,18 @@ export const FormProduct: FC<FormProductProps> = ({ action }) => {
             placeholder="Código único"
             value={code}
             setValue={setCode}
+          />
+        </div>
+        <div className="grid gap-y-2">
+          <label htmlFor="reference" className="font-semibold">
+            Referência
+          </label>
+          <FormInput
+            id="reference"
+            type="text"
+            placeholder="Referência do produto"
+            value={reference}
+            setValue={setReference}
           />
         </div>
         <div className="grid gap-y-2">

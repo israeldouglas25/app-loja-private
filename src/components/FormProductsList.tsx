@@ -7,6 +7,7 @@ export type Product = {
   id: number;
   name: string;
   code: number;
+  reference: string;
   stockQuantity: number;
   category: string;
   unitValue: number;
@@ -22,10 +23,11 @@ export function FormProductsList() {
         errorPrefix="Produto"
         loadingMessage="Carregando produtos..."
         emptyMessage="Nenhum produto encontrado."
-        visibleFields={["id", "code", "name", "category", "stockQuantity", "unitValue"]}
+        visibleFields={["id", "code", "reference", "name", "category", "stockQuantity", "unitValue"]}
         columnLabels={{
           id: "ID",
           code: "Código",
+          reference: "Referência",
           name: "Nome",
           category: "Categoria",
           stockQuantity: "Estoque",
