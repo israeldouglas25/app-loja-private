@@ -495,7 +495,7 @@ export function GenericTable<T extends TableItem>({
 
   const resolvedSearchFields = useMemo(() => {
     if (searchFields?.length) return searchFields;
-    return ['name', 'email', 'code'];
+    return ['name', 'email', 'code', 'reference'];
   }, [searchFields]);
 
   const normalizeText = useCallback((value: unknown) => {
