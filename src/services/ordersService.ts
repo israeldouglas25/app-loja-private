@@ -3,7 +3,6 @@ import { apiFetch } from './apiClient';
 export type OrderQueryParams = {
   startDate?: string;
   endDate?: string;
-  paymentType?: string;
   page?: number;
   size?: number;
 };
@@ -18,9 +17,19 @@ export type PaginatedResponse<T> = {
   last: boolean;
 };
 
+export type PaymentSummaryItem = {
+  paymentType?: string;
+  type?: string;
+  name?: string;
+  total?: number;
+  amount?: number;
+  value?: number;
+};
+
 export type OrdersListResponse = {
   orders: PaginatedResponse<Order>;
   sumTotalOrders?: number;
+  paymentSummary?: PaymentSummaryItem[];
 };
 
 const buildQueryString = (params?: OrderQueryParams) => {
@@ -32,10 +41,6 @@ const buildQueryString = (params?: OrderQueryParams) => {
 
   if (params?.endDate) {
     searchParams.set('endDate', params.endDate);
-  }
-
-  if (params?.paymentType) {
-    searchParams.set('paymentType', params.paymentType);
   }
 
   if (typeof params?.page === 'number') {
@@ -113,7 +118,7 @@ export const ordersService = {
       body: JSON.stringify(data),
     });
   },
-  
+
   // DELETE - Deletar
   delete: async (id: number) => {
     await apiFetch(`/orders/${id}`, { method: 'DELETE' });

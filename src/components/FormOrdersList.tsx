@@ -1,7 +1,12 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { OrderItem, ordersService, UserType } from '../services/ordersService';
+import {
+  OrderItem,
+  ordersService,
+  PaymentSummaryItem,
+  UserType,
+} from '../services/ordersService';
 import { GenericTable } from '../utils/GenericTable';
 import { formatCurrency } from '../utils/currencyFormatter';
 import { FormSearchDate, TodayLocalISO } from './FormSearchDate';
@@ -24,8 +29,10 @@ export function FormOrdersList() {
   );
   const [appliedStartDate, setAppliedStartDate] = useState(today);
   const [appliedEndDate, setAppliedEndDate] = useState(today);
-  const [appliedPaymentType, setAppliedPaymentType] = useState<string | undefined>(undefined);
   const [sumTotalOrders, setSumTotalOrders] = useState<number | null>(null);
+  const [paymentSummary, setPaymentSummary] = useState<PaymentSummaryItem[]>(
+    []
+  );
 
   const toggleItems = (orderId: number) => {
     setExpandedItems((current) => ({
@@ -41,16 +48,16 @@ export function FormOrdersList() {
         const response = await ordersService.getAll({
           startDate: appliedStartDate,
           endDate: appliedEndDate,
-          paymentType: appliedPaymentType,
           page: params?.page,
           size: params?.size,
         });
 
         setSumTotalOrders(response.sumTotalOrders ?? null);
+        setPaymentSummary(response.paymentSummary ?? []);
         return response.orders;
       },
     }),
-    [appliedStartDate, appliedEndDate, appliedPaymentType]
+    [appliedStartDate, appliedEndDate]
   );
 
   const renderDiscountCell = (value: unknown) => {
@@ -151,22 +158,95 @@ export function FormOrdersList() {
     );
   };
 
+  const formatPaymentLabel = (value?: string) => {
+    switch (value?.toUpperCase()) {
+      case 'CREDITO':
+        return 'Crédito';
+      case 'DEBITO':
+        return 'Débito';
+      case 'DINHEIRO':
+        return 'Dinheiro';
+      case 'PIX':
+        return 'Pix';
+      default:
+        return value || 'Outro';
+    }
+  };
+
+  const getPaymentValue = (item: PaymentSummaryItem) => {
+    if (typeof item.total === 'number') {
+      return item.total;
+    }
+
+    if (typeof item.amount === 'number') {
+      return item.amount;
+    }
+
+    if (typeof item.value === 'number') {
+      return item.value;
+    }
+
+    return 0;
+  };
+
+  const getPaymentCardClassName = (label: string) => {
+    switch (label.toLowerCase()) {
+      case 'crédito':
+        return 'border-purple-200 bg-gradient-to-br from-purple-50 to-violet-100 text-purple-900';
+      case 'débito':
+        return 'border-blue-200 bg-gradient-to-br from-blue-50 to-cyan-100 text-blue-900';
+      case 'dinheiro':
+        return 'border-green-200 bg-gradient-to-br from-green-50 to-emerald-100 text-green-900';
+      case 'pix':
+        return 'border-pink-200 bg-gradient-to-br from-pink-50 to-rose-100 text-pink-900';
+      default:
+        return 'border-gray-200 bg-white text-gray-800';
+    }
+  };
+
   return (
     <div>
       <div className="mt-4 flex flex-col sm:flex-row sm:items-stretch gap-4">
         <FormSearchDate
-          onSearch={(startDate, endDate, paymentType) => {
+          onSearch={(startDate, endDate) => {
             setAppliedStartDate(startDate);
             setAppliedEndDate(endDate);
-            setAppliedPaymentType(paymentType);
           }}
         />
 
-        {sumTotalOrders !== null && (
-          <div className="sm:ml-auto self-stretch flex items-center rounded border border-orange-300 bg-orange-50 p-3 text-orange-900">
-            <strong className="mr-2">Total:</strong> {formatCurrency(sumTotalOrders)}
-          </div>
-        )}
+        <div className="sm:ml-auto flex flex-wrap items-start gap-3">
+          {sumTotalOrders !== null && (
+            <div className="min-w-45 rounded-xl border border-orange-300 bg-linear-to-br from-orange-50 to-orange-100 p-4 text-orange-900 shadow-sm">
+              <p className="text-xs font-semibold uppercase tracking-wide text-orange-700">
+                Total geral
+              </p>
+              <p className="mt-2 text-xl font-bold">
+                {formatCurrency(sumTotalOrders)}
+              </p>
+            </div>
+          )}
+
+          {paymentSummary.map((item, index) => {
+            const summaryValue = getPaymentValue(item);
+            const summaryLabel = formatPaymentLabel(
+              item.paymentType || item.type || item.name
+            );
+
+            return (
+              <div
+                key={`${summaryLabel}-${index}`}
+                className={`min-w-40 rounded-xl border p-4 shadow-sm ${getPaymentCardClassName(summaryLabel)}`}
+              >
+                <p className="text-xs font-semibold uppercase tracking-wide opacity-80">
+                  {summaryLabel}
+                </p>
+                <p className="mt-2 text-lg font-semibold">
+                  {formatCurrency(summaryValue)}
+                </p>
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       <GenericTable<Order>
