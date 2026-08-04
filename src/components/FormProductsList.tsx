@@ -49,7 +49,7 @@ export function FormProductsList() {
         errorPrefix="Produto"
         loadingMessage="Carregando produtos..."
         emptyMessage="Nenhum produto encontrado."
-        visibleFields={["id", "code", "reference", "name", "category", "stockQuantity", "unitValue", "createdAt"]}
+        visibleFields={["id", "code", "reference", "name", "category", "stockQuantity", "unitValue", "createdAt", "updatedAt"]}
         columnLabels={{
           id: "ID",
           code: "Código",
@@ -59,9 +59,11 @@ export function FormProductsList() {
           stockQuantity: "Estoque",
           unitValue: "Valor Unitário",
           createdAt: "Criado em",
+          updatedAt: "Atualizado em",
         }}
         cellRenderers={{
           createdAt: renderDateTimeCell,
+          updatedAt: renderDateTimeCell,
         }}
       />
     </div>
