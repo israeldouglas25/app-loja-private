@@ -51,6 +51,11 @@ export interface GenericTableProps<T extends TableItem> {
   visibleFields?: string[];
   columnLabels?: Record<string, string>;
   cellRenderers?: Record<string, (value: unknown, item: T) => ReactNode>;
+  editorRenderers?: Record<
+    string,
+    (value: unknown, item: T, rowData: T, onChange: (value: string) => void) => ReactNode
+  >;
+  editValueMappers?: Record<string, (value: string, item: T) => Partial<T>>;
   reloadKey?: number;
   useServerPagination?: boolean;
   searchFields?: string[];
@@ -107,23 +112,26 @@ interface TableRowProps<T extends TableItem> {
   item: T;
   index: number;
   displayKeys: string[];
-  disabledFields: string[];
   isEditing: boolean;
   rowData: T;
   getValueByPath: (item: unknown, path: string) => unknown;
-  onEditChange: (itemId: number, key: string, value: string) => void;
+  onEditChange: (itemId: number, key: string, value: string, rowData: T) => void;
   onSave: (id: number) => void;
   onCancel: (id: number) => void;
   onStartEdit: (item: T) => void;
   onDelete: (id: number) => void;
   renderCellValue: (key: string, value: unknown, item: T) => ReactNode;
+  isFieldEditable: (key: string) => boolean;
+  editorRenderers?: Record<
+    string,
+    (value: unknown, item: T, rowData: T, onChange: (value: string) => void) => ReactNode
+  >;
 }
 
 function TableRow<T extends TableItem>({
   item,
   index,
   displayKeys,
-  disabledFields,
   isEditing,
   rowData,
   getValueByPath,
@@ -133,23 +141,38 @@ function TableRow<T extends TableItem>({
   onStartEdit,
   onDelete,
   renderCellValue,
+  isFieldEditable,
+  editorRenderers,
 }: TableRowProps<T>) {
   return (
     <tr key={item.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-      {displayKeys.map((key) => (
-        <td key={key} className="border border-gray-300 px-4 py-2">
-          {isEditing && !disabledFields.includes(key) ? (
-            <input
-              type="text"
-              className="w-full rounded border p-1"
-              value={String(getValueByPath(rowData, key) ?? '')}
-              onChange={(e) => onEditChange(item.id, key, e.target.value)}
-            />
-          ) : (
-            renderCellValue(key, rowData[key], item)
-          )}
-        </td>
-      ))}
+      {displayKeys.map((key) => {
+        const canEditField = isFieldEditable(key);
+
+        return (
+          <td key={key} className="border border-gray-300 px-4 py-2">
+            {isEditing && canEditField ? (
+              editorRenderers?.[key] ? (
+                editorRenderers[key](
+                  getValueByPath(rowData, key),
+                  item,
+                  rowData,
+                  (value) => onEditChange(item.id, key, value, rowData)
+                )
+              ) : (
+                <input
+                  type="text"
+                  className="w-full rounded border p-1"
+                  value={String(getValueByPath(rowData, key) ?? '')}
+                  onChange={(e) => onEditChange(item.id, key, e.target.value, rowData)}
+                />
+              )
+            ) : (
+              renderCellValue(key, rowData[key], item)
+            )}
+          </td>
+        );
+      })}
       <td className="border border-gray-300 px-4 py-2">
         <div className="flex items-center justify-center gap-2">
           {isEditing ? (
@@ -254,6 +277,8 @@ export function GenericTable<T extends TableItem>({
   visibleFields,
   columnLabels = {},
   cellRenderers,
+  editorRenderers,
+  editValueMappers,
   reloadKey = 0,
   useServerPagination = false,
   searchFields,
@@ -450,17 +475,35 @@ export function GenericTable<T extends TableItem>({
       return clone;
     });
 
+  const isDateLikeField = useCallback((key: string) => {
+    const normalizedKey = key.toLowerCase();
+    return (
+      normalizedKey.includes('date') ||
+      normalizedKey.includes('time') ||
+      normalizedKey.endsWith('at')
+    );
+  }, []);
+
+  const isFieldEditable = useCallback(
+    (key: string) => !disabledFields.includes(key) && !isDateLikeField(key),
+    [disabledFields, isDateLikeField]
+  );
+
   const handleEditChange = useCallback(
-    (itemId: number, key: string, value: string) => {
+    (itemId: number, key: string, value: string, rowData: T) => {
+      const patch = editValueMappers?.[key]?.(value, rowData) ?? {
+        [key]: value,
+      };
+
       setEditing((prev) => ({
         ...prev,
         [itemId]: {
           ...prev[itemId],
-          [key]: value,
+          ...patch,
         },
       }));
     },
-    []
+    [editValueMappers]
   );
 
   const saveEdit = async (id: number) => {
@@ -638,7 +681,6 @@ export function GenericTable<T extends TableItem>({
                   item={item}
                   index={index}
                   displayKeys={displayKeys}
-                  disabledFields={disabledFields}
                   isEditing={isEditing}
                   rowData={rowData}
                   getValueByPath={getValueByPath}
@@ -648,6 +690,8 @@ export function GenericTable<T extends TableItem>({
                   onStartEdit={startEdit}
                   onDelete={deleteItem}
                   renderCellValue={renderCellValue}
+                  isFieldEditable={isFieldEditable}
+                  editorRenderers={editorRenderers}
                 />
               );
             })}

@@ -5,6 +5,7 @@ import {
   OrderItem,
   ordersService,
   PaymentSummaryItem,
+  PaymentType,
   UserType,
 } from '../services/ordersService';
 import { GenericTable } from '../utils/GenericTable';
@@ -164,6 +165,51 @@ export function FormOrdersList() {
     return 0;
   };
 
+  const paymentOptions = useMemo(() => {
+    const values = new Set<string>();
+
+    paymentSummary.forEach((item) => {
+      const rawValue = item.paymentType || item.type || item.name;
+      if (rawValue) {
+        values.add(String(rawValue).toUpperCase());
+      }
+    });
+
+    Object.values(PaymentType).forEach((value) => values.add(value));
+
+    return Array.from(values).map((value) => ({
+      value,
+      label: formatPaymentLabel(value),
+    }));
+  }, [paymentSummary]);
+
+  const renderPaymentEditor = (
+    value: unknown,
+    _item: Order,
+    rowData: Order,
+    onChange: (value: string) => void
+  ) => {
+    const selectedValue = String((rowData.payment ?? value ?? '').toString());
+
+    return (
+      <select
+        className="w-full rounded border p-1"
+        value={selectedValue}
+        onChange={(event) => onChange(event.target.value)}
+      >
+        {paymentOptions.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+    );
+  };
+
+  const mapPaymentValue = (value: string) => ({
+    payment: value,
+  });
+
   const getPaymentCardClassName = (label: string) => {
     switch (label.toLowerCase()) {
       case 'crédito':
@@ -256,6 +302,12 @@ export function FormOrdersList() {
           items: renderItemsCell,
           discount: renderDiscountCell,
           dateOrder: renderDateTimeCell,
+        }}
+        editorRenderers={{
+          payment: renderPaymentEditor,
+        }}
+        editValueMappers={{
+          payment: mapPaymentValue,
         }}
       />
     </div>
