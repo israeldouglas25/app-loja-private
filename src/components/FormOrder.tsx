@@ -390,6 +390,18 @@ export function FormOrder() {
               </div>
             </div>
           </section>
+        </div>        
+        <div className="grid gap-y-2">
+          <label htmlFor="discount" className="font-semibold">
+            Desconto
+          </label>
+          <FormInput
+            id="discount"
+            type="number"
+            placeholder="0"
+            value={discount}
+            setValue={setDiscount}
+          />
         </div>
         <div className="grid gap-y-2">
           <label htmlFor="paymentType" className="font-semibold">
@@ -409,18 +421,6 @@ export function FormOrder() {
             <option value={PaymentType.CREDITO}>CREDITO</option>
             <option value={PaymentType.PIX}>PIX</option>
           </select>
-        </div>
-        <div className="grid gap-y-2">
-          <label htmlFor="discount" className="font-semibold">
-            Desconto
-          </label>
-          <FormInput
-            id="discount"
-            type="number"
-            placeholder="0"
-            value={discount}
-            setValue={setDiscount}
-          />
         </div>
         <div className="rounded border bg-white p-4">
           <div className="flex items-center justify-between text-sm font-semibold">
