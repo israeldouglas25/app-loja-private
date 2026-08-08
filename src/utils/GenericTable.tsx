@@ -53,9 +53,10 @@ export interface GenericTableProps<T extends TableItem> {
   cellRenderers?: Record<string, (value: unknown, item: T) => ReactNode>;
   editorRenderers?: Record<
     string,
-    (value: unknown, item: T, rowData: T, onChange: (value: string) => void) => ReactNode
+    (value: unknown, item: T, rowData: T, onChange: (value: unknown) => void) => ReactNode
   >;
-  editValueMappers?: Record<string, (value: string, item: T) => Partial<T>>;
+  editValueMappers?: Record<string, (value: unknown, item: T) => Partial<T>>;
+  onSaveItem?: (id: number, updated: T, original: T) => Promise<void>;
   reloadKey?: number;
   useServerPagination?: boolean;
   searchFields?: string[];
@@ -115,7 +116,7 @@ interface TableRowProps<T extends TableItem> {
   isEditing: boolean;
   rowData: T;
   getValueByPath: (item: unknown, path: string) => unknown;
-  onEditChange: (itemId: number, key: string, value: string, rowData: T) => void;
+  onEditChange: (itemId: number, key: string, value: unknown, rowData: T) => void;
   onSave: (id: number) => void;
   onCancel: (id: number) => void;
   onStartEdit: (item: T) => void;
@@ -124,7 +125,7 @@ interface TableRowProps<T extends TableItem> {
   isFieldEditable: (key: string) => boolean;
   editorRenderers?: Record<
     string,
-    (value: unknown, item: T, rowData: T, onChange: (value: string) => void) => ReactNode
+    (value: unknown, item: T, rowData: T, onChange: (value: unknown) => void) => ReactNode
   >;
 }
 
@@ -279,6 +280,7 @@ export function GenericTable<T extends TableItem>({
   cellRenderers,
   editorRenderers,
   editValueMappers,
+  onSaveItem,
   reloadKey = 0,
   useServerPagination = false,
   searchFields,
@@ -490,7 +492,7 @@ export function GenericTable<T extends TableItem>({
   );
 
   const handleEditChange = useCallback(
-    (itemId: number, key: string, value: string, rowData: T) => {
+    (itemId: number, key: string, value: unknown, rowData: T) => {
       const patch = editValueMappers?.[key]?.(value, rowData) ?? {
         [key]: value,
       };
@@ -509,8 +511,13 @@ export function GenericTable<T extends TableItem>({
   const saveEdit = async (id: number) => {
     const updated = editing[id];
     if (!updated) return;
+    const original = items.find((item) => item.id === id) || updated;
     try {
-      await service.update?.(id, updated);
+      if (typeof onSaveItem === 'function') {
+        await onSaveItem(id, updated, original);
+      } else {
+        await service.update?.(id, updated);
+      }
       await loadItems();
       cancelEdit(id);
       setResponse({

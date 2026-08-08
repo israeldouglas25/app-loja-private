@@ -187,7 +187,7 @@ export function FormOrdersList() {
     value: unknown,
     _item: Order,
     rowData: Order,
-    onChange: (value: string) => void
+    onChange: (value: unknown) => void
   ) => {
     const selectedValue = String((rowData.payment ?? value ?? '').toString());
 
@@ -206,9 +206,100 @@ export function FormOrdersList() {
     );
   };
 
-  const mapPaymentValue = (value: string) => ({
-    payment: value,
+  const renderItemsEditor = (
+    value: unknown,
+    _item: Order,
+    rowData: Order,
+    onChange: (value: unknown) => void
+  ) => {
+    const items = Array.isArray(value) ? (value as OrderItem[]) : [];
+
+    const handleRemove = (removeIndex: number) => {
+      onChange(items.filter((_, index) => index !== removeIndex));
+    };
+
+    if (items.length === 0) {
+      return <span className="text-gray-500">Nenhum item</span>;
+    }
+
+    return (
+      <div className="space-y-2">
+        <ul className="ml-0 list-disc space-y-1 text-sm text-gray-700">
+          {items.map((orderItem, index) => {
+            const productName =
+              orderItem.productName ??
+              (orderItem.productId
+                ? `Produto ${orderItem.productId}`
+                : `Item ${index + 1}`);
+            const unitValue = orderItem.unitValue;
+            const subTotal = orderItem.subTotal;
+
+            return (
+              <li key={`${rowData.id}-${index}`} className="flex items-center justify-between gap-3">
+                <div>
+                  <span className="font-medium">{productName}</span>
+                  <span className="ml-2">x{orderItem.quantity}</span>
+                  {typeof unitValue === 'number' && (
+                    <span className="ml-2">{formatCurrency(unitValue)}</span>
+                  )}
+                  {typeof subTotal === 'number' && (
+                    <span className="ml-2 text-gray-500">({formatCurrency(subTotal)})</span>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleRemove(index)}
+                  className="rounded bg-red-100 px-2 py-1 text-xs font-semibold text-red-700 transition hover:bg-red-200"
+                >
+                  Remover
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+        <p className="text-xs text-gray-500">Remover um item cria um pedido de ajuste negativo ao salvar.</p>
+      </div>
+    );
+  };
+
+  const mapPaymentValue = (value: unknown) => ({
+    payment: String(value ?? ''),
   });
+
+  const handleOrderSave = async (id: number, updated: Order, original: Order) => {
+    const removedItems = (original.items ?? []).filter((originalItem) => {
+      return !(updated.items ?? []).some(
+        (currentItem) => currentItem.productId === originalItem.productId
+      );
+    });
+
+    const paymentType = (updated.payment as PaymentType) ||
+      (original.payment as PaymentType) ||
+      PaymentType.DINHEIRO;
+
+    const updatePayload: Partial<Order> = {
+      payment: updated.payment,
+    };
+
+    if (removedItems.length > 0) {
+      updatePayload.items = updated.items;
+    }
+
+    await ordersService.update(id, updatePayload);
+
+    if (removedItems.length > 0) {
+      const negativeItems = removedItems.map((item) => ({
+        productId: item.productId,
+        quantity: item.quantity * -1,
+      }));
+
+      await ordersService.create({
+        paymentType,
+        discount: 0,
+        items: negativeItems,
+      });
+    }
+  };
 
   const getPaymentCardClassName = (label: string) => {
     switch (label.toLowerCase()) {
@@ -305,10 +396,13 @@ export function FormOrdersList() {
         }}
         editorRenderers={{
           payment: renderPaymentEditor,
+          items: renderItemsEditor,
         }}
         editValueMappers={{
           payment: mapPaymentValue,
         }}
+        disabledFields={['id', 'user', 'subTotal', 'discount', 'total']}
+        onSaveItem={handleOrderSave}
       />
     </div>
   );

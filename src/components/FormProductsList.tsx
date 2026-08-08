@@ -49,7 +49,7 @@ export function FormProductsList() {
     value: unknown,
     _item: Product,
     rowData: Product,
-    onChange: (value: string) => void
+    onChange: (value: unknown) => void
   ) => {
     const selectedValue = String(
       (rowData as Product & { categoryId?: number }).categoryId ?? value ?? ''
@@ -70,8 +70,8 @@ export function FormProductsList() {
     );
   };
 
-  const mapCategoryValue = (value: string) => ({
-    categoryId: Number(value),
+  const mapCategoryValue = (value: unknown) => ({
+    categoryId: Number(value as string),
   });
 
   return (
