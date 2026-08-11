@@ -238,7 +238,10 @@ export function FormOrdersList() {
             const subTotal = orderItem.subTotal;
 
             return (
-              <li key={`${rowData.id}-${index}`} className="flex items-center justify-between gap-3">
+              <li
+                key={`${rowData.id}-${index}`}
+                className="flex items-center justify-between gap-3"
+              >
                 <div>
                   <span className="font-medium">{productName}</span>
                   <span className="ml-2">x{orderItem.quantity}</span>
@@ -246,7 +249,9 @@ export function FormOrdersList() {
                     <span className="ml-2">{formatCurrency(unitValue)}</span>
                   )}
                   {typeof subTotal === 'number' && (
-                    <span className="ml-2 text-gray-500">({formatCurrency(subTotal)})</span>
+                    <span className="ml-2 text-gray-500">
+                      ({formatCurrency(subTotal)})
+                    </span>
                   )}
                 </div>
                 <button
@@ -260,7 +265,9 @@ export function FormOrdersList() {
             );
           })}
         </ul>
-        <p className="text-xs text-gray-500">Remover um item cria um pedido de ajuste negativo ao salvar.</p>
+        <p className="text-xs text-gray-500">
+          Remover um item cria um pedido de ajuste negativo ao salvar.
+        </p>
       </div>
     );
   };
@@ -269,20 +276,27 @@ export function FormOrdersList() {
     payment: String(value ?? ''),
   });
 
-  const handleOrderSave = async (id: number, updated: Order, original: Order) => {
+  const handleOrderSave = async (
+    id: number,
+    updated: Order,
+    original: Order
+  ) => {
     const removedItems = (original.items ?? []).filter((originalItem) => {
       return !(updated.items ?? []).some(
         (currentItem) => currentItem.productId === originalItem.productId
       );
     });
 
-    const paymentType = (updated.payment as PaymentType) ||
+    const paymentType =
+      (updated.payment as PaymentType) ||
       (original.payment as PaymentType) ||
       PaymentType.DINHEIRO;
 
-    const updatePayload: Partial<Order> = {
-      payment: updated.payment,
-    };
+    const updatePayload: Record<string, unknown> = {};
+
+    if (updated.payment) {
+      updatePayload.paymentType = paymentType;
+    }
 
     if (removedItems.length > 0) {
       updatePayload.items = updated.items;
@@ -398,6 +412,7 @@ export function FormOrdersList() {
           items: renderItemsCell,
           discount: renderDiscountCell,
           createdAt: renderDateTimeCell,
+          updatedAt: renderDateTimeCell,
         }}
         editorRenderers={{
           payment: renderPaymentEditor,
