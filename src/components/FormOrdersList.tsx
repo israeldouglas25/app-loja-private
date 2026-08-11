@@ -21,7 +21,10 @@ export type Order = {
   discount: number;
   subTotal: number;
   total: number;
-  dateOrder: string;
+  createdAt: string;
+  updatedAt: string;
+  createdBy: string;
+  updatedBy: string;
 };
 
 export function FormOrdersList() {
@@ -370,29 +373,31 @@ export function FormOrdersList() {
         emptyMessage="Nenhum pedido encontrado."
         visibleFields={[
           'id',
-          'dateOrder',
+          'createdAt',
           'user',
           'items',
           'subTotal',
           'discount',
           'total',
           'payment',
+          'updatedAt',
         ]}
         columnLabels={{
           id: 'ID',
-          dateOrder: 'Data',
+          createdAt: 'Data',
           user: 'Usuário',
           items: 'Itens',
           subTotal: 'Subtotal',
           discount: 'Desconto',
           total: 'Total',
           payment: 'Tipo de Pagamento',
+          updatedAt: 'Última Atualização',
         }}
         cellRenderers={{
           user: renderUserCell,
           items: renderItemsCell,
           discount: renderDiscountCell,
-          dateOrder: renderDateTimeCell,
+          createdAt: renderDateTimeCell,
         }}
         editorRenderers={{
           payment: renderPaymentEditor,

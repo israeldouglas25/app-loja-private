@@ -90,7 +90,10 @@ export interface Order {
   discount: number;
   subTotal: number;
   total: number;
-  dateOrder: string;
+  createdAt: string;
+  updatedAt: string;
+  createdBy: string;
+  updatedBy: string;
 }
 
 export const ordersService = {
