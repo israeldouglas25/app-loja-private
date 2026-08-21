@@ -3,19 +3,23 @@
  * @param value - O valor numérico a ser formatado
  * @returns String formatada como moeda brasileira (ex: 26,90)
  */
-export function formatCurrency(value: any): string {
+export function formatCurrency(value: unknown): string {
   // Se o valor não é um número, retorna a string original
-  if (value === null || value === undefined || isNaN(value)) {
-    return value ?? "";
+  if (value === null || value === undefined) {
+    return '';
+  }
+
+  if (typeof value !== 'number' && typeof value !== 'string') {
+    return String(value);
   }
 
   // Converte para número se for string
-  const numValue = typeof value === "string" ? parseFloat(value) : value;
+  const numValue = typeof value === 'string' ? parseFloat(value) : value;
 
   // Formata usando Intl.NumberFormat com localidade pt-BR
-  return new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(numValue);
@@ -26,16 +30,16 @@ export function formatCurrency(value: any): string {
  * Adicione aqui nomes de campos que representam valores em reais
  */
 export const CURRENCY_FIELDS = [
-  "unitValue",
-  "price",
-  "valor",
-  "preco",
-  "salario",
-  "total",
-  "subtotal",
-  "amount",
-  "valor_unitario",
-  "valor_total",
+  'unitValue',
+  'price',
+  'valor',
+  'preco',
+  'salario',
+  'total',
+  'subtotal',
+  'amount',
+  'valor_unitario',
+  'valor_total',
 ];
 
 /**
@@ -55,9 +59,9 @@ export function isCurrencyField(fieldName: string): boolean {
  * @param value - Valor a ser formatado
  * @returns Valor formatado como moeda se for campo monetário, caso contrário retorna o valor original
  */
-export function formatIfCurrency(fieldName: string, value: any): string {
+export function formatIfCurrency(fieldName: string, value: unknown): string {
   if (isCurrencyField(fieldName)) {
     return formatCurrency(value);
   }
-  return value ?? "";
+  return value == null ? '' : String(value);
 }
