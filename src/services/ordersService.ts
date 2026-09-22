@@ -3,6 +3,7 @@ import { apiFetch } from './apiClient';
 export type OrderQueryParams = {
   startDate?: string;
   endDate?: string;
+  status?: boolean;
   page?: number;
   size?: number;
 };
@@ -41,6 +42,10 @@ const buildQueryString = (params?: OrderQueryParams) => {
 
   if (params?.endDate) {
     searchParams.set('endDate', params.endDate);
+  }
+
+  if (params?.status !== undefined) {
+    searchParams.set('status', String(params.status));
   }
 
   if (typeof params?.page === 'number') {

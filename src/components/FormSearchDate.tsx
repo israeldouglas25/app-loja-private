@@ -11,15 +11,16 @@ export function TodayLocalISO() {
 export function FormSearchDate({
   onSearch,
 }: {
-  onSearch: (startDate: string, endDate: string) => void;
+  onSearch: (startDate: string, endDate: string, status: boolean | undefined) => void;
 }) {
   const today = TodayLocalISO();
   const [startDate, setStartDate] = useState(today);
   const [endDate, setEndDate] = useState(today);
+  const [status, setStatus] = useState<boolean | undefined>(undefined);
 
   const handleSubmit = (event: React.SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
-    onSearch(startDate, endDate);
+    onSearch(startDate, endDate, status);
   };
 
   return (
@@ -50,6 +51,21 @@ export function FormSearchDate({
           onChange={(event) => setEndDate(event.target.value)}
           className="rounded border px-3 py-2"
         />
+      </div>
+      <div>
+        <label htmlFor="status" className="mb-1 block text-sm font-medium">
+          Status
+        </label>
+        <select
+          id="status"
+          className="rounded border px-3 py-2"
+          defaultValue=""
+          onChange={(event) => setStatus(event.target.value === 'true' ? true : event.target.value === 'false' ? false : undefined)}
+        >
+          <option value="">Todos</option>
+          <option value="true">Ativo</option>
+          <option value="false">Inativo</option>
+        </select>
       </div>
       <button
         type="submit"

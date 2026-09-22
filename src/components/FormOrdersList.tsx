@@ -21,6 +21,7 @@ export type Order = {
   discount: number;
   subTotal: number;
   total: number;
+  active?: boolean;
   createdAt: string;
   updatedAt: string;
   createdBy: string;
@@ -34,6 +35,7 @@ export function FormOrdersList() {
   );
   const [appliedStartDate, setAppliedStartDate] = useState(today);
   const [appliedEndDate, setAppliedEndDate] = useState(today);
+  const [appliedStatus, setAppliedStatus] = useState<boolean | undefined>(undefined);
   const [sumTotalOrders, setSumTotalOrders] = useState<number | null>(null);
   const [paymentSummary, setPaymentSummary] = useState<PaymentSummaryItem[]>(
     []
@@ -53,6 +55,7 @@ export function FormOrdersList() {
         const response = await ordersService.getAll({
           startDate: appliedStartDate,
           endDate: appliedEndDate,
+          status: appliedStatus,
           page: params?.page,
           size: params?.size,
         });
@@ -62,7 +65,7 @@ export function FormOrdersList() {
         return response.orders;
       },
     }),
-    [appliedStartDate, appliedEndDate]
+    [appliedStartDate, appliedEndDate, appliedStatus]
   );
 
   const renderDiscountCell = (value: unknown) => {
@@ -83,6 +86,22 @@ export function FormOrdersList() {
 
     const user = value as { name?: string };
     return <span>{user.name || '—'}</span>;
+  };
+
+  const renderActiveCell = (value: unknown) => {
+    const isActive = value === true || value === 'true' || value === 1;
+
+    return (
+      <span
+        className={`rounded-full px-2 py-1 text-xs font-semibold ${
+          isActive
+            ? 'bg-green-100 text-green-700'
+            : 'bg-red-100 text-red-600'
+        }`}
+      >
+        {isActive ? 'Ativo' : 'Inativo'}
+      </span>
+    );
   };
 
   const renderItemsCell = (value: unknown, item: Order) => {
@@ -337,9 +356,10 @@ export function FormOrdersList() {
     <div>
       <div className="mt-4 flex flex-col sm:flex-row sm:items-stretch gap-4">
         <FormSearchDate
-          onSearch={(startDate, endDate) => {
+          onSearch={(startDate, endDate, status) => {
             setAppliedStartDate(startDate);
             setAppliedEndDate(endDate);
+            setAppliedStatus(status);
           }}
         />
 
@@ -393,6 +413,7 @@ export function FormOrdersList() {
           'subTotal',
           'discount',
           'total',
+          'active',
           'payment',
           'updatedAt',
         ]}
@@ -404,6 +425,7 @@ export function FormOrdersList() {
           subTotal: 'Subtotal',
           discount: 'Desconto',
           total: 'Total',
+          active: 'Status',
           payment: 'Tipo de Pagamento',
           updatedAt: 'Última Atualização',
         }}
@@ -413,6 +435,7 @@ export function FormOrdersList() {
           discount: renderDiscountCell,
           createdAt: renderDateTimeCell,
           updatedAt: renderDateTimeCell,
+          active: renderActiveCell,
         }}
         editorRenderers={{
           payment: renderPaymentEditor,
@@ -421,7 +444,7 @@ export function FormOrdersList() {
         editValueMappers={{
           payment: mapPaymentValue,
         }}
-        disabledFields={['id', 'user', 'subTotal', 'discount', 'total']}
+        disabledFields={['id', 'user', 'subTotal', 'discount', 'total', 'active']}
         onSaveItem={handleOrderSave}
       />
     </div>
